@@ -2,35 +2,30 @@ package com.picoto.jdbc.wrapper.test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import org.apache.derby.tools.ij;
+import org.junit.Test;
 
 import com.picoto.jdbc.wrapper.ClassWrapper;
 import com.picoto.jdbc.wrapper.JdbcWrapper;
 import com.picoto.jdbc.wrapper.JdbcWrapperException;
-
-import org.junit.Test;
-
+import com.picoto.jdbc.wrapper.test.Libro;
 
 public class JdbcWrapperTest {
 
 	@Test
-	public void runTest()  {
+	public void runTest() {
 
 		Connection con = getDerbyConnection();
 
 		JdbcWrapper.debug("************************************");
 		JdbcWrapper.debug("Iniciando test");
-
 
 		llamarPA(con);
 
@@ -43,21 +38,20 @@ public class JdbcWrapperTest {
 		contarLibros(con);
 
 		consultarTodos(con);
-		
+
 		crearLibro(con);
 
 		consultarTodos(con);
-		
+
 		actualizarLibro(con);
-		
+
 		consultarTodos(con);
-		
+
 		borrarLibro(con);
 
 		consultarTodos(con);
-		
-		JdbcWrapper.close(con);
 
+		JdbcWrapper.close(con);
 
 	}
 
@@ -231,12 +225,5 @@ public class JdbcWrapperTest {
 		}
 		JdbcWrapper.debug("********************* ----------------------- ***************************");
 	}
-	
-	public static void getNuevoLibro(int isbn, String[] libro) {
-		libro[0] = "La fundación";
-	}
-	
-	public static String getNuevoLibroFuncion(int isbn) {
-		return "Los límites de la fundación";
-	}
+
 }
