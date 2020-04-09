@@ -11,11 +11,11 @@ TEXTO CLOB,
 PRECIO DECIMAL(7,2)
 );
 
-INSERT INTO LIBROS (ISBN, TITULO, FECHA, PRECIO, TEXTO) VALUES (1,'El señor de los anillos', CURRENT_DATE, 12.34, 'Texto muuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuy largo');
+INSERT INTO LIBROS (ISBN, TITULO, FECHA, PRECIO, TEXTO) VALUES (1,'El seï¿½or de los anillos', CURRENT_DATE, 12.34, 'Texto muuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuy largo');
 INSERT INTO LIBROS (ISBN, TITULO, FECHA, PRECIO, TEXTO) VALUES (2,'El Hobbit', CURRENT_DATE, 45.67, 'Texto corto');
 
 COMMIT;
 
-CREATE PROCEDURE EJEMPLOPA (IN ISBN INT, OUT TITULO VARCHAR(500)) LANGUAGE JAVA PARAMETER STYLE JAVA EXTERNAL NAME 'es.aeat.jdbc.wrapper.test.JdbcWrapperTest.getNuevoLibro';
+CREATE PROCEDURE EJEMPLOPA (IN ISBN INT, OUT TITULO VARCHAR(500)) LANGUAGE JAVA PARAMETER STYLE JAVA EXTERNAL NAME 'com.picoto.jdbc.wrapper.test.Libro.getNuevoLibro';
 
-CREATE FUNCTION EJEMPLOPAFUNC (ISBN INT) RETURNS VARCHAR(500) LANGUAGE JAVA PARAMETER STYLE JAVA EXTERNAL NAME 'es.aeat.jdbc.wrapper.test.JdbcWrapperTest.getNuevoLibroFuncion';
+CREATE FUNCTION EJEMPLOPAFUNC (ISBN INT) RETURNS VARCHAR(500) LANGUAGE JAVA PARAMETER STYLE JAVA EXTERNAL NAME 'com.picoto.jdbc.wrapper.test.Libro.getNuevoLibroFuncion';
