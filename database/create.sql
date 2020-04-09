@@ -11,7 +11,7 @@ TEXTO CLOB,
 PRECIO DECIMAL(7,2)
 );
 
-INSERT INTO LIBROS (ISBN, TITULO, FECHA, PRECIO, TEXTO) VALUES (1,'El se�or de los anillos', CURRENT_DATE, 12.34, 'Texto muuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuy largo');
+INSERT INTO LIBROS (ISBN, TITULO, FECHA, PRECIO, TEXTO) VALUES (1,'El señor de los anillos', CURRENT_DATE, 12.34, 'Texto muuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuy largo');
 INSERT INTO LIBROS (ISBN, TITULO, FECHA, PRECIO, TEXTO) VALUES (2,'El Hobbit', CURRENT_DATE, 45.67, 'Texto corto');
 
 COMMIT;

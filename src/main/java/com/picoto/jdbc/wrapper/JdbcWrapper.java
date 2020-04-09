@@ -112,6 +112,32 @@ public class JdbcWrapper<T> {
 			throw new JdbcWrapperException("Error ejecutando update", e);
 		}
 	}
+	
+	public int delete(String updateStr, ParameterManager paramManager) {
+		try {
+			if (con == null) {
+				throw new JdbcWrapperException("Error ejecutando delete. No hay conexión a BB.DD.");
+			}
+
+			if (updateStr == null) {
+				throw new JdbcWrapperException("Error ejecutando delete. No se ha definido la sentencia update");
+			}
+
+			if (paramManager == null) {
+				throw new JdbcWrapperException("Error ejecutando delete. Es necesario definir un gestor de parámetros");
+			}
+
+			PreparedStatement ps = getPreparedStatement(updateStr);
+			ParameterSetter setter = new ParameterSetter();
+			setter.setStatement(ps);
+			paramManager.configureParameters(setter);
+			int rows = ps.executeUpdate();
+			close(ps);
+			return rows;
+		} catch (Exception e) {
+			throw new JdbcWrapperException("Error ejecutando delete", e);
+		}
+	}
 
 
 	public void insert(String updateStr, ParameterManager paramManager) {

@@ -10,66 +10,40 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.derby.tools.ij;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.picoto.jdbc.wrapper.ClassWrapper;
 import com.picoto.jdbc.wrapper.JdbcWrapper;
 import com.picoto.jdbc.wrapper.JdbcWrapperException;
-import com.picoto.jdbc.wrapper.test.Libro;
 
 public class JdbcWrapperTest {
 
-	@Test
-	public void runTest() {
+	Connection con;
 
-		Connection con = getDerbyConnection();
-
-		JdbcWrapper.debug("************************************");
-		JdbcWrapper.debug("Iniciando test");
-
-		llamarPA(con);
-
-		llamarPAFuncion(con);
-
-		consultarLibro(con);
-
-		consultaLibro2(con);
-
-		contarLibros(con);
-
-		consultarTodos(con);
-
-		crearLibro(con);
-
-		consultarTodos(con);
-
-		actualizarLibro(con);
-
-		consultarTodos(con);
-
-		borrarLibro(con);
-
-		consultarTodos(con);
-
+	@After
+	public void closeConnection() {
 		JdbcWrapper.close(con);
-
 	}
 
-	private Connection getDerbyConnection() {
+	@Before
+	public void getConnection() {
 		try {
 			String driver = "org.apache.derby.jdbc.EmbeddedDriver";
 			String connectionURL = "jdbc:derby:database/testDB;create=true";
 			Class.forName(driver);
-			Connection con = DriverManager.getConnection(connectionURL, "user", "pass");
-			ij.runScript(con, new FileInputStream("database/create.sql"), "ISO-8859-1", new ByteArrayOutputStream(1),
+			con = DriverManager.getConnection(connectionURL, "user", "pass");
+			ij.runScript(con, new FileInputStream("database/create.sql"), "UTF-8", new ByteArrayOutputStream(1),
 					"ISO-8859-1");
-			return con;
 		} catch (Exception e) {
 			throw new JdbcWrapperException("No hay conexión con BB.DD.");
 		}
 	}
 
-	private void llamarPA(Connection con) {
+	@Test
+	public void llamarPA() {
 		final ClassWrapper<String> wrapper = new ClassWrapper<String>();
 		JdbcWrapper<Libro> testWrap = new JdbcWrapper<>();
 		testWrap.setConnection(con);
@@ -82,9 +56,12 @@ public class JdbcWrapperTest {
 
 		JdbcWrapper.debug("* Recuperar libro desde PA:  " + wrapper.getValue());
 
+		Assert.assertEquals("La fundación", wrapper.getValue());
+
 	}
 
-	private void llamarPAFuncion(Connection con) {
+	@Test
+	public void llamarPAFuncion() {
 		final ClassWrapper<String> wrapper = new ClassWrapper<String>();
 		JdbcWrapper<Libro> testWrap = new JdbcWrapper<>();
 		testWrap.setConnection(con);
@@ -96,19 +73,23 @@ public class JdbcWrapperTest {
 		}, true);
 
 		JdbcWrapper.debug("* Recuperar libro desde PA con format de funcion:  " + wrapper.getValue());
-
+		Assert.assertEquals("Los límites de la fundación", wrapper.getValue());
 	}
 
-	private void contarLibros(Connection con) {
+	@Test
+	public void contarLibros() {
 		JdbcWrapper<Integer> testWrap = new JdbcWrapper<>();
 		testWrap.setConnection(con);
 		int total = testWrap.count("select count(*) from libros");
 
 		JdbcWrapper.debug("* Contando libros");
 		JdbcWrapper.debug("Total libros: " + total);
+		Assert.assertEquals(2, total);
+
 	}
 
-	private void consultarLibro(Connection con) {
+	@Test
+	public void consultarLibro() {
 		JdbcWrapper<Libro> testWrap = new JdbcWrapper<>();
 		testWrap.setConnection(con);
 		List<Libro> libros = testWrap.query("select titulo, isbn, fecha, precio, texto from libros where isbn = ?",
@@ -134,9 +115,12 @@ public class JdbcWrapperTest {
 			JdbcWrapper.debug(l.toString());
 		}
 
+		Assert.assertEquals(1, libros.size());
+
 	}
 
-	private void crearLibro(Connection con) {
+	@Test
+	public void crearLibro() {
 		JdbcWrapper<Libro> testWrap = new JdbcWrapper<Libro>();
 		testWrap.setConnection(con);
 		testWrap.insert("insert into libros (isbn, titulo, fecha, precio, texto) values (?, ?, ?, ?, ?)", ps -> {
@@ -151,29 +135,33 @@ public class JdbcWrapperTest {
 
 	}
 
-	private void actualizarLibro(Connection con) {
+	@Test
+	public void actualizarLibro() {
 		JdbcWrapper<Libro> testWrap = new JdbcWrapper<Libro>();
 		testWrap.setConnection(con);
-		testWrap.insert("update libros set precio = 25.52 where titulo = ?", ps -> {
+		int rowsUpdated = testWrap.update("update libros set precio = 25.52 where titulo = ?", ps -> {
 			ps.setString(1, "El Silmarilion");
 		});
 		testWrap.commit(con);
 		JdbcWrapper.debug("* Libro actualizado");
-
+		Assert.assertEquals(0, rowsUpdated);
 	}
 
-	private void borrarLibro(Connection con) {
+	@Test
+	public void borrarLibro() {
 		JdbcWrapper<Libro> testWrap = new JdbcWrapper<Libro>();
 		testWrap.setConnection(con);
-		testWrap.insert("delete from libros where titulo = ?", ps -> {
+		int rowsDeleted = testWrap.delete("delete from libros where titulo = ?", ps -> {
 			ps.setString(1, "El Silmarilion");
 		});
 		testWrap.commit(con);
 		JdbcWrapper.debug("* Libro borrado");
+		Assert.assertEquals(0, rowsDeleted);
 
 	}
 
-	private void consultaLibro2(Connection con) {
+	@Test
+	public void consultaLibro2() {
 		JdbcWrapper<Libro> testWrap = new JdbcWrapper<>();
 		testWrap.setConnection(con);
 		List<Libro> libros = testWrap.namedQuery(
@@ -199,9 +187,13 @@ public class JdbcWrapperTest {
 		for (Libro l : libros) {
 			JdbcWrapper.debug(l.toString());
 		}
+
+		Assert.assertEquals(1, libros.size());
+
 	}
 
-	private void consultarTodos(Connection con) {
+	@Test
+	public void consultarTodos() {
 		JdbcWrapper<Libro> testWrap = new JdbcWrapper<>();
 		testWrap.setConnection(con);
 		List<Libro> libros = testWrap.query("select titulo, isbn, fecha, precio, texto from libros", c -> {
@@ -224,6 +216,9 @@ public class JdbcWrapperTest {
 			JdbcWrapper.debug(l.toString());
 		}
 		JdbcWrapper.debug("********************* ----------------------- ***************************");
+
+		Assert.assertEquals(2, libros.size());
+
 	}
 
 }
