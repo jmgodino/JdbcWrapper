@@ -1,0 +1,21 @@
+drop table libros;
+DROP PROCEDURE EJEMPLOPA;
+
+DROP FUNCTION EJEMPLOPAFUNC;
+
+create table libros (
+ISBN INT PRIMARY KEY,
+TITULO VARCHAR(500),
+FECHA DATE,
+TEXTO CLOB,
+PRECIO DECIMAL(7,2)
+);
+
+INSERT INTO LIBROS (ISBN, TITULO, FECHA, PRECIO, TEXTO) VALUES (1,'El señor de los anillos', CURRENT_DATE, 12.34, 'Texto muuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuy largo');
+INSERT INTO LIBROS (ISBN, TITULO, FECHA, PRECIO, TEXTO) VALUES (2,'El Hobbit', CURRENT_DATE, 45.67, 'Texto corto');
+
+COMMIT;
+
+CREATE PROCEDURE EJEMPLOPA (IN ISBN INT, OUT TITULO VARCHAR(500)) LANGUAGE JAVA PARAMETER STYLE JAVA EXTERNAL NAME 'es.aeat.jdbc.wrapper.test.JdbcWrapperTest.getNuevoLibro';
+
+CREATE FUNCTION EJEMPLOPAFUNC (ISBN INT) RETURNS VARCHAR(500) LANGUAGE JAVA PARAMETER STYLE JAVA EXTERNAL NAME 'es.aeat.jdbc.wrapper.test.JdbcWrapperTest.getNuevoLibroFuncion';
