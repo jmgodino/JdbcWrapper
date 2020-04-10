@@ -3,14 +3,14 @@ package com.picoto.jdbc.wrapper.test;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import javax.sql.DataSource;
+
+import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.apache.derby.tools.ij;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,22 +21,18 @@ import com.picoto.jdbc.wrapper.JdbcWrapperException;
 
 public class JdbcWrapperTest {
 
-	Connection con;
-
-	@After
-	public void closeConnection() {
-		JdbcWrapper.close(con);
-	}
+	DataSource ds;
 
 	@Before
-	public void getConnection() {
+	public void getDataSource() {
+
 		try {
-			String driver = "org.apache.derby.jdbc.EmbeddedDriver";
-			String connectionURL = "jdbc:derby:database/testDB;create=true";
-			Class.forName(driver);
-			con = DriverManager.getConnection(connectionURL, "user", "pass");
-			ij.runScript(con, new FileInputStream("database/create.sql"), "UTF-8", new ByteArrayOutputStream(1),
-					"ISO-8859-1");
+			EmbeddedDataSource dsDerby = new EmbeddedDataSource();
+			dsDerby.setDatabaseName("database/testDB");
+			dsDerby.setCreateDatabase("create");
+			ds = dsDerby;
+			ij.runScript(ds.getConnection(), new FileInputStream("database/create.sql"), "UTF-8",
+					new ByteArrayOutputStream(1), "ISO-8859-1");
 		} catch (Exception e) {
 			throw new JdbcWrapperException("No hay conexión con BB.DD.");
 		}
@@ -46,7 +42,7 @@ public class JdbcWrapperTest {
 	public void llamarPA() {
 		final ClassWrapper<String> wrapper = new ClassWrapper<String>();
 		JdbcWrapper<Libro> testWrap = new JdbcWrapper<>();
-		testWrap.setConnection(con);
+		testWrap.setDataSource(ds);
 		testWrap.callProcedure("EJEMPLOPA(?,?)", cs -> {
 			cs.registrarEntradaInt(1, 4);
 			cs.registrarSalidaString(2);
@@ -64,7 +60,7 @@ public class JdbcWrapperTest {
 	public void llamarPAFuncion() {
 		final ClassWrapper<String> wrapper = new ClassWrapper<String>();
 		JdbcWrapper<Libro> testWrap = new JdbcWrapper<>();
-		testWrap.setConnection(con);
+		testWrap.setDataSource(ds);
 		testWrap.callProcedure("EJEMPLOPAFUNC(?)", cs -> {
 			cs.registrarSalidaString(1);
 			cs.registrarEntradaInt(2, 4);
@@ -79,7 +75,7 @@ public class JdbcWrapperTest {
 	@Test
 	public void contarLibros() {
 		JdbcWrapper<Integer> testWrap = new JdbcWrapper<>();
-		testWrap.setConnection(con);
+		testWrap.setDataSource(ds);
 		int total = testWrap.count("select count(*) from libros");
 
 		JdbcWrapper.debug("* Contando libros");
@@ -91,7 +87,7 @@ public class JdbcWrapperTest {
 	@Test
 	public void consultarLibro() {
 		JdbcWrapper<Libro> testWrap = new JdbcWrapper<>();
-		testWrap.setConnection(con);
+		testWrap.setDataSource(ds);
 		List<Libro> libros = testWrap.query("select titulo, isbn, fecha, precio, texto from libros where isbn = ?",
 				ps -> {
 					ps.setInt(1, 2);
@@ -122,7 +118,7 @@ public class JdbcWrapperTest {
 	@Test
 	public void crearLibro() {
 		JdbcWrapper<Libro> testWrap = new JdbcWrapper<Libro>();
-		testWrap.setConnection(con);
+		testWrap.setDataSource(ds, true);
 		testWrap.insert("insert into libros (isbn, titulo, fecha, precio, texto) values (?, ?, ?, ?, ?)", ps -> {
 			ps.setInt(1, 3);
 			ps.setString(2, "El Silmarilion");
@@ -130,7 +126,6 @@ public class JdbcWrapperTest {
 			ps.setBigDecimal(4, BigDecimal.valueOf(34.56f));
 			ps.setClob(5, "Vaya rollo de libro");
 		});
-		testWrap.commit(con);
 		JdbcWrapper.debug("* Libro creado");
 
 	}
@@ -138,11 +133,10 @@ public class JdbcWrapperTest {
 	@Test
 	public void actualizarLibro() {
 		JdbcWrapper<Libro> testWrap = new JdbcWrapper<Libro>();
-		testWrap.setConnection(con);
+		testWrap.setDataSource(ds, true);
 		int rowsUpdated = testWrap.update("update libros set precio = 25.52 where titulo = ?", ps -> {
 			ps.setString(1, "El Silmarilion");
 		});
-		testWrap.commit(con);
 		JdbcWrapper.debug("* Libro actualizado");
 		Assert.assertEquals(0, rowsUpdated);
 	}
@@ -150,20 +144,18 @@ public class JdbcWrapperTest {
 	@Test
 	public void borrarLibro() {
 		JdbcWrapper<Libro> testWrap = new JdbcWrapper<Libro>();
-		testWrap.setConnection(con);
-		int rowsDeleted = testWrap.delete("delete from libros where titulo = ?", ps -> {
+		testWrap.setDataSource(ds, true);
+		testWrap.delete("delete from libros where titulo = ?", ps -> {
 			ps.setString(1, "El Silmarilion");
 		});
-		testWrap.commit(con);
 		JdbcWrapper.debug("* Libro borrado");
-		Assert.assertEquals(0, rowsDeleted);
 
 	}
 
 	@Test
 	public void consultaLibro2() {
 		JdbcWrapper<Libro> testWrap = new JdbcWrapper<>();
-		testWrap.setConnection(con);
+		testWrap.setDataSource(ds);
 		List<Libro> libros = testWrap.namedQuery(
 				"select titulo, isbn, fecha, precio, texto from libros where ISBN = :isbn and titulo = :titulo", np -> {
 					np.setInt("isbn", 1);
@@ -195,7 +187,7 @@ public class JdbcWrapperTest {
 	@Test
 	public void consultarTodos() {
 		JdbcWrapper<Libro> testWrap = new JdbcWrapper<>();
-		testWrap.setConnection(con);
+		testWrap.setDataSource(ds);
 		List<Libro> libros = testWrap.query("select titulo, isbn, fecha, precio, texto from libros", c -> {
 
 			List<Libro> lista = new ArrayList<Libro>(100);
