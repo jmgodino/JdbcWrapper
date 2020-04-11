@@ -52,6 +52,7 @@ public class ParameterSetter {
 
 	public void setBlob(int pos, byte[] valor) {
 		try {
+			//TODO: A revisar en Oracle
 			statement.setBinaryStream(pos, new ByteArrayInputStream(valor));
 		} catch (SQLException e) {
 			throw new JdbcWrapperException(String.format("Error preparando parametro Blob %d %s", pos, valor), e);
@@ -60,6 +61,7 @@ public class ParameterSetter {
 
 	public void setClob(int pos, String valor) {
 		try {
+			//TODO: A revisar en Oracle
 			statement.setAsciiStream(pos, new ByteArrayInputStream(valor.getBytes()));
 		} catch (SQLException e) {
 			throw new JdbcWrapperException(String.format("Error preparando parametro Clob %d %s", pos, valor), e);

@@ -4,6 +4,7 @@ import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +37,7 @@ public class JdbcWrapper<T> {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			con = ds.getConnection();
+			con = getConnection();
 			if (ds == null) {
 				throw new JdbcWrapperException("Error ejecutando consulta. No hay conexión a BB.DD.");
 			}
@@ -77,7 +78,7 @@ public class JdbcWrapper<T> {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			con = ds.getConnection();
+			con = getConnection();
 			if (con == null) {
 				throw new JdbcWrapperException("Error ejecutando consulta. No hay conexión a BB.DD.");
 			}
@@ -113,7 +114,7 @@ public class JdbcWrapper<T> {
 		Connection con = null;
 		PreparedStatement ps = null;
 		try {
-			con = ds.getConnection();
+			con = getConnection();
 			if (con == null) {
 				throw new JdbcWrapperException("Error ejecutando update. No hay conexión a BB.DD.");
 			}
@@ -131,9 +132,6 @@ public class JdbcWrapper<T> {
 			setter.setStatement(ps);
 			paramManager.configureParameters(setter);
 			int rows = ps.executeUpdate();
-			if (autoCommit) {
-				commit(con);
-			}
 			return rows;
 		} catch (Exception e) {
 			throw new JdbcWrapperException("Error ejecutando update", e);
@@ -143,11 +141,19 @@ public class JdbcWrapper<T> {
 		}
 	}
 
+	private Connection getConnection() throws SQLException {
+		Connection con = ds.getConnection();
+		if (autoCommit) {
+			con.setAutoCommit(true);
+		}
+		return con;
+	}
+
 	public void delete(String updateStr, ParameterManager paramManager) {
 		Connection con = null;
 		PreparedStatement ps = null;
 		try {
-			con = ds.getConnection();
+			con = getConnection();
 			if (con == null) {
 				throw new JdbcWrapperException("Error ejecutando delete. No hay conexión a BB.DD.");
 			}
@@ -165,9 +171,7 @@ public class JdbcWrapper<T> {
 			setter.setStatement(ps);
 			paramManager.configureParameters(setter);
 			ps.execute();
-			if (autoCommit) {
-				commit(con);
-			}
+
 
 		} catch (Exception e) {
 			throw new JdbcWrapperException("Error ejecutando delete", e);
@@ -182,7 +186,8 @@ public class JdbcWrapper<T> {
 		Connection con = null;
 		PreparedStatement ps = null;
 		try {
-			con = ds.getConnection();
+			con = getConnection();
+
 			if (con == null) {
 				throw new JdbcWrapperException("Error ejecutando insert. No hay conexión a BB.DD.");
 			}
@@ -200,9 +205,6 @@ public class JdbcWrapper<T> {
 			setter.setStatement(ps);
 			paramManager.configureParameters(setter);
 			ps.execute();
-			if (autoCommit) {
-				commit(con);
-			}
 
 		} catch (Exception e) {
 			throw new JdbcWrapperException("Error ejecutando insert", e);
@@ -218,7 +220,7 @@ public class JdbcWrapper<T> {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			con = ds.getConnection();
+			con = getConnection();
 			if (con == null) {
 				throw new JdbcWrapperException("Error ejecutando consulta. No hay conexión a BB.DD.");
 			}
@@ -337,7 +339,7 @@ public class JdbcWrapper<T> {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			con = ds.getConnection();
+			con = getConnection();
 			if (con == null) {
 				throw new JdbcWrapperException("Error ejecutando consulta. No hay conexión a BB.DD.");
 			}
@@ -392,7 +394,7 @@ public class JdbcWrapper<T> {
 		Connection con = null;
 		CallableStatement cs = null;
 		try {
-			con = ds.getConnection();
+			con = getConnection();
 			if (con == null) {
 				throw new JdbcWrapperException("Error ejecutando PA. No hay conexión a BB.DD.");
 			}
@@ -419,9 +421,6 @@ public class JdbcWrapper<T> {
 			ProcedureOutputParameterGetter getter = new ProcedureOutputParameterGetter();
 			getter.setCallableStatement(cs);
 			resultManager.getOutputParameters(getter);
-			if (autoCommit) {
-				commit(con);
-			}
 
 		} catch (Exception e) {
 			throw new JdbcWrapperException("Error ejecutando PA", e);

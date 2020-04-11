@@ -58,11 +58,11 @@ public class Libro {
 	}
 
 	public static void getNuevoLibro(int isbn, String[] libro) {
-		libro[0] = "La fundación";
+		libro[0] = "La fundacion";
 	}
 	
 	public static String getNuevoLibroFuncion(int isbn) {
-		return "Los límites de la fundación";
+		return "Los limites de la fundacion";
 	}
 
 }
