@@ -8,7 +8,7 @@ import java.sql.Timestamp;
 import java.util.Date;
 
 public class Cursor {
-	
+
 	private ResultSet resultSet;
 
 	public Cursor() {
@@ -17,6 +17,10 @@ public class Cursor {
 
 	public void setResultSet(ResultSet resultSet) {
 		this.resultSet = resultSet;
+	}
+
+	public ResultSet getResultSet() {
+		return resultSet;
 	}
 
 	public int getInt(int pos) {

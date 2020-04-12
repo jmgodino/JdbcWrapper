@@ -5,13 +5,11 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.sql.DataSource;
 
-public class JdbcWrapper<T> {
+public class JdbcWrapper<T> extends JdbcBase {
 
 	private DataSource ds;
 	private boolean autoCommit = false;
@@ -172,7 +170,6 @@ public class JdbcWrapper<T> {
 			paramManager.configureParameters(setter);
 			ps.execute();
 
-
 		} catch (Exception e) {
 			throw new JdbcWrapperException("Error ejecutando delete", e);
 		} finally {
@@ -254,26 +251,6 @@ public class JdbcWrapper<T> {
 
 	}
 
-	public void commit(Connection con) {
-		try {
-			if (con != null) {
-				con.commit();
-			}
-		} catch (Exception e) {
-			throw new JdbcWrapperException("Error haciendo commit", e);
-		}
-	}
-
-	public void rollback(Connection con) {
-		try {
-			if (con != null) {
-				con.rollback();
-			}
-		} catch (Exception e) {
-			throw new JdbcWrapperException("Error haciendo rollback", e);
-		}
-	}
-
 	protected PreparedStatement getPreparedStatement(Connection con, String query) {
 		try {
 			PreparedStatement ps = con.prepareStatement(query);
@@ -297,40 +274,6 @@ public class JdbcWrapper<T> {
 			debug(String.format("Error creando PA: %s", query));
 			throw new JdbcWrapperException(query, e);
 		}
-	}
-
-	protected void close(ResultSet rs) {
-		try {
-			if (rs != null) {
-				rs.close();
-			}
-		} catch (Exception e) {
-			debug("Error cerrando cursor");
-		}
-	}
-
-	protected void close(Statement stmt) {
-		try {
-			if (stmt != null) {
-				stmt.close();
-			}
-		} catch (Exception e) {
-			debug("Error cerrando sentencia");
-		}
-	}
-
-	public static void close(Connection con) {
-		try {
-			if (con != null) {
-				con.close();
-			}
-		} catch (Exception e) {
-			debug("Error cerrando conexion");
-		}
-	}
-
-	public static void debug(String msg) {
-		System.out.println(msg);
 	}
 
 	public List<T> namedQuery(String namedQueryStr, NamedParameterManager paramManager,
@@ -357,23 +300,10 @@ public class JdbcWrapper<T> {
 				throw new JdbcWrapperException("Error ejecutando consulta. Es necesario definir un gestor de filas");
 			}
 
-			List<String> fields = new ArrayList<String>();
-			int pos;
-
-			while ((pos = namedQueryStr.indexOf(":")) != -1) {
-				int end = namedQueryStr.substring(pos).indexOf(" ");
-				if (end == -1)
-					end = namedQueryStr.length();
-				else
-					end += pos;
-				fields.add(namedQueryStr.substring(pos + 1, end));
-				namedQueryStr = namedQueryStr.substring(0, pos) + "?" + namedQueryStr.substring(end);
-			}
-
 			ps = getPreparedStatement(con, namedQueryStr);
 			NamedParameterSetter setter = new NamedParameterSetter();
 			setter.setStatement(ps);
-			setter.setFields(fields);
+			setter.setFields(JdbcUtils.extractFields(namedQueryStr));
 			paramManager.configureParameters(setter);
 			rs = ps.executeQuery();
 			Cursor c = new Cursor();
@@ -429,6 +359,37 @@ public class JdbcWrapper<T> {
 			close(con);
 		}
 
+	}
+
+	/**
+	 * Este método necesita que los campos devueltos en la proyección de la consulta
+	 * tengan el mismo nombre que los campos del objeto de salida. Además el objeto
+	 * necesitará un constructor vacío. En caso contrario se producirá un error.
+	 * 
+	 * @param namedQueryStr
+	 * @return
+	 */
+	public JdbcQuery<T> getQuery(String namedQueryStr) {
+		Connection con = null;
+		PreparedStatement ps = null;
+		try {
+			con = getConnection();
+			if (con == null) {
+				throw new JdbcWrapperException("Error generando consulta inline. No hay conexión a BB.DD.");
+			}
+
+			if (namedQueryStr == null) {
+				throw new JdbcWrapperException("Error generando consulta inline. No se ha definido la consulta");
+			}
+
+			ps = getPreparedStatement(con, namedQueryStr);
+			JdbcQuery<T> execQuery = new JdbcQuery<T>(ps);
+			return execQuery;
+		} catch (Exception e) {
+			throw new JdbcWrapperException("Error generando consulta inline", e);
+		} finally {
+			// En este caso no cerramos nada...
+		}
 	}
 
 }

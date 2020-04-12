@@ -9,6 +9,10 @@ public class Libro {
 	private BigDecimal precio;
 	private Date fecha;
 
+	public Libro() {
+		super();
+	}
+
 	public BigDecimal getPrecio() {
 		return precio;
 	}
@@ -43,12 +47,12 @@ public class Libro {
 		this.titulo = titulo;
 	}
 
-	public int getISBN() {
+	public Integer getIsbn() {
 		return ISBN;
 	}
 
-	public void setISBN(int iSBN) {
-		ISBN = iSBN;
+	public void setIsbn(Integer isbn) {
+		ISBN = isbn;
 	}
 
 	@Override
@@ -60,7 +64,7 @@ public class Libro {
 	public static void getNuevoLibro(int isbn, String[] libro) {
 		libro[0] = "La fundacion";
 	}
-	
+
 	public static String getNuevoLibroFuncion(int isbn) {
 		return "Los limites de la fundacion";
 	}

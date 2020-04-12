@@ -2,16 +2,17 @@ package com.picoto.jdbc.wrapper.test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
-import org.apache.derby.jdbc.EmbeddedDataSource;
-import org.apache.derby.tools.ij;
-
 import java.math.BigDecimal;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.apache.derby.jdbc.EmbeddedDataSource;
+import org.apache.derby.tools.ij;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -110,7 +111,7 @@ public class JdbcWrapperTest {
 					while (c.next()) {
 						Libro l = new Libro();
 						l.setTitulo(c.getString(1));
-						l.setISBN(c.getInt(2));
+						l.setIsbn(c.getInt(2));
 						l.setFecha(c.getDate(3));
 						l.setPrecio(c.getBigDecimal(4));
 						l.setTexto(c.getClobAsString(5));
@@ -179,7 +180,7 @@ public class JdbcWrapperTest {
 					while (c.next()) {
 						Libro l = new Libro();
 						l.setTitulo(c.getString(1));
-						l.setISBN(c.getInt(2));
+						l.setIsbn(c.getInt(2));
 						l.setFecha(c.getDate(3));
 						l.setPrecio(c.getBigDecimal(4));
 						l.setTexto(c.getClobAsString(5));
@@ -207,7 +208,7 @@ public class JdbcWrapperTest {
 			while (c.next()) {
 				Libro l = new Libro();
 				l.setTitulo(c.getString(1));
-				l.setISBN(c.getInt(2));
+				l.setIsbn(c.getInt(2));
 				l.setFecha(c.getDate(3));
 				l.setPrecio(c.getBigDecimal(4));
 				l.setTexto(c.getClobAsString(5));
@@ -223,6 +224,27 @@ public class JdbcWrapperTest {
 		JdbcWrapper.debug("********************* ----------------------- ***************************");
 
 		Assert.assertEquals(2, libros.size());
+
+	}
+
+	@Test
+	public void consultaLibroEstiloCascada() throws ParseException {
+		JdbcWrapper<Libro> testWrap = new JdbcWrapper<>();
+		testWrap.setDataSource(ds);
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+		Date fecha = sdf.parse("12/04/2020");
+		List<Libro> libros = testWrap
+				.getQuery(
+						"select titulo, isbn, fecha, precio, texto from libros where ISBN = ? and titulo = ? and precio = ? and fecha = ?")
+				.parameterInteger(1).parameterString("El señor de los anillos").parameterBigDecimal(new BigDecimal("12.34")).parameterDate(fecha).executeQuery(Libro.class);
+
+		JdbcWrapper.debug("********************* Libros consulta inline ***************************");
+		for (Libro l : libros) {
+			JdbcWrapper.debug(l.toString());
+		}
+		JdbcWrapper.debug("********************* ----------------------- ***************************");
+
+		Assert.assertEquals(1, libros.size());
 
 	}
 
