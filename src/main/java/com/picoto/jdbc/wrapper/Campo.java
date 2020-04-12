@@ -2,21 +2,17 @@ package com.picoto.jdbc.wrapper;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.sql.Types;
+import java.util.Date;
 
 public class Campo {
 
-	public enum TIPO {
-		STRING, INTEGER, BIGDECIMAL, DATE, CLOB, BLOB
-	};
-
 	private String nombre;
-	private TIPO tipo;
+	private String className;
 
-	public Campo(String nombre, TIPO tipo) {
+	public Campo(String nombre, String className) {
 		super();
-		this.nombre = nombre;
-		this.tipo = tipo;
+		setNombre(nombre);
+		setClassName(className);
 	}
 
 	public String getNombre() {
@@ -27,73 +23,41 @@ public class Campo {
 		this.nombre = nombre;
 	}
 
-	public TIPO getTipo() {
-		return tipo;
-	}
-
-	public void setTipo(TIPO tipo) {
-		this.tipo = tipo;
-	}
-
-	public static TIPO map(int tipo) {
-		switch (tipo) {
-		case Types.CHAR:
-			return TIPO.STRING;
-		case Types.INTEGER:
-		case Types.SMALLINT:
-			return TIPO.INTEGER;
-		case Types.DATE:
-		case Types.TIMESTAMP:
-			return TIPO.DATE;
-		case Types.DECIMAL:
-		case Types.BIGINT:
-		case Types.FLOAT:
-		case Types.DOUBLE:
-			return TIPO.BIGDECIMAL;
-		case Types.CLOB:
-			return TIPO.CLOB;
-		case Types.BLOB:
-			return TIPO.BLOB;
-		default:
-			return TIPO.STRING;
+	public String getClassName() {
+		if ("java.sql.Date".equalsIgnoreCase(className)) {
+			return "java.util.Date";
+		} else if ("java.sql.Clob".equalsIgnoreCase(className)) {
+			return "java.lang.String";
+		} else if ("java.sql.Blob".equalsIgnoreCase(className)) {
+			return "byte[]";
+		} else {
+			return className;
 		}
-
 	}
 
-	public Class<?> getClassType() throws ClassNotFoundException {
-		switch (tipo) {
-		case STRING:
-			return Class.forName("java.lang.String");
-		case INTEGER:
-			return Class.forName("java.lang.Integer");
-		case BIGDECIMAL:
-			return Class.forName("java.math.BigDecimal");
-		case DATE:
-			return Class.forName("java.util.Date");
-		case CLOB:
-			return Class.forName("java.lang.String");
-		case BLOB:
-			return Class.forName("java.lang.Byte");
-		default:
-			return Class.forName("java.lang.String");
-		}
+	public void setClassName(String className) {
+		this.className = className;
 	}
 
 	public Object getValor(int posicion, Cursor c) throws IOException, SQLException {
-		switch (tipo) {
-		case STRING:
+		switch (className) {
+		case "java.lang.String":
 			return c.getString(posicion);
-		case INTEGER:
+		case "java.lang.Integer":
+		case "int":
 			return c.getInt(posicion);
-		case BIGDECIMAL:
+		case "java.math.BigDecimal":
+		case "float":
+		case "double":
 			return c.getBigDecimal(posicion);
-		case DATE:
-			return c.getDate(posicion);
-		case CLOB:
+		case "java.sql.Date":
+			return new Date(c.getDate(posicion).getTime());
+		case "java.sql.Clob":
 			return JdbcUtils.readFully(c.getClob(posicion).getAsciiStream());
-		case BLOB:
+		case "java.sql.Blob":
 			return JdbcUtils.readFullyBinary(c.getBlob(posicion).getBinaryStream());
-		default: return c.getString(posicion);
+		default:
+			return c.getString(posicion);
 		}
 	}
 

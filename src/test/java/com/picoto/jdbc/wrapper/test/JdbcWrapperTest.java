@@ -233,10 +233,43 @@ public class JdbcWrapperTest {
 		testWrap.setDataSource(ds);
 		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 		Date fecha = sdf.parse("12/04/2020");
-		List<Libro> libros = testWrap
-				.getQuery(
-						"select titulo, isbn, fecha, precio, texto from libros where ISBN = ? and titulo = ? and precio = ? and fecha = ?")
-				.parameterInteger(1).parameterString("El señor de los anillos").parameterBigDecimal(new BigDecimal("12.34")).parameterDate(fecha).executeQuery(Libro.class);
+		List<Libro> libros = testWrap.getQuery(
+				"select titulo, isbn, fecha, precio, texto from libros where ISBN = ? and titulo = ? and precio = ? and fecha = ?")
+				.parameterInteger(1).parameterString("El señor de los anillos")
+				.parameterBigDecimal(new BigDecimal("12.34")).parameterDate(fecha).executeQuery(Libro.class);
+
+		JdbcWrapper.debug("********************* Libros consulta inline ***************************");
+		for (Libro l : libros) {
+			JdbcWrapper.debug(l.toString());
+		}
+		JdbcWrapper.debug("********************* ----------------------- ***************************");
+
+		Assert.assertEquals(1, libros.size());
+
+	}
+
+	@Test
+	public void consultaLibroEstiloCascada2() throws ParseException {
+		JdbcWrapper<Libro> testWrap = new JdbcWrapper<>();
+		testWrap.setDataSource(ds);
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+		Date fecha = sdf.parse("12/04/2020");
+		List<Libro> libros = testWrap.getQuery(
+				"select titulo, isbn, fecha, precio, texto from libros where ISBN = ? and titulo = ? and precio = ? and fecha = ?")
+				.parameterInteger(1).parameterString("El señor de los anillos")
+				.parameterBigDecimal(new BigDecimal("12.34")).parameterDate(fecha).executeMapperQuery(c -> {
+					List<Libro> lista = new ArrayList<Libro>(100);
+					while (c.next()) {
+						Libro l = new Libro();
+						l.setTitulo(c.getString(1));
+						l.setIsbn(c.getInt(2));
+						l.setFecha(c.getDate(3));
+						l.setPrecio(c.getBigDecimal(4));
+						l.setTexto(c.getClobAsString(5));
+						lista.add(l);
+					}
+					return lista;
+				});
 
 		JdbcWrapper.debug("********************* Libros consulta inline ***************************");
 		for (Libro l : libros) {

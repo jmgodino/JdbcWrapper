@@ -70,6 +70,24 @@ public class JdbcQuery<T> extends JdbcBase {
 			close(ps);
 		}
 	}
+	
+	public List<T> executeMapperQuery(RowManagerLambda<T> rowManager) {
+		ResultSet rs = null;
+		PreparedStatement ps = paramSetter.getStatement();
+		try {
+			rs = ps.executeQuery();
+			Cursor c = new Cursor();
+			c.setResultSet(rs);
+			List<T> lista = rowManager.mapRow(c);
+			return lista;
+
+		} catch (Exception e) {
+			throw new JdbcWrapperException("Error ejecutando consulta inline con rowManager", e);
+		} finally {
+			close(rs);
+			close(ps);
+		}
+	}
 
 	public List<T> mapRow(Cursor c, Class<T> clase)
 			throws InstantiationException, IllegalAccessException, SQLException, IllegalArgumentException,
@@ -108,8 +126,9 @@ public class JdbcQuery<T> extends JdbcBase {
 		ResultSetMetaData rsmd = rs.getMetaData();
 
 		for (int i = 1; i <= rsmd.getColumnCount(); i++) {
-			debug("Campo en la query: " + rsmd.getColumnName(i) + " Tipo: " + rsmd.getColumnType(i));
-			listaCampos.add(new Campo(rsmd.getColumnName(i), Campo.map(rsmd.getColumnType(i))));
+			debug("Campo en la query: " + rsmd.getColumnName(i) + " Tipo: "+rsmd.getColumnClassName(i));
+			listaCampos.add(new Campo(rsmd.getColumnName(i), rsmd.getColumnClassName(i)));
+			
 		}
 		return listaCampos;
 	}
@@ -125,10 +144,10 @@ public class JdbcQuery<T> extends JdbcBase {
 	private Method getMetodo(Class<T> clase, Campo campo) {
 		String nombreMetodo = "set".concat(JdbcUtils.capitalize(campo.getNombre()));
 		try {
-			return clase.getDeclaredMethod(nombreMetodo, campo.getClassType());
+			return clase.getDeclaredMethod(nombreMetodo, Class.forName(campo.getClassName()));
 		} catch (Exception e) {
 			throw new JdbcWrapperException("No se ha encontrado el metodo ".concat(nombreMetodo)
-					.concat(" en la clase ".concat(clase.getCanonicalName())));
+					.concat(" en la clase ".concat(clase.getCanonicalName())), e);
 		}
 	}
 
