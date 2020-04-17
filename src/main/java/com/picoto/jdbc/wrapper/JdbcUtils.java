@@ -39,8 +39,9 @@ public class JdbcUtils {
 		return buf.toByteArray();
 	}
 
-	public static List<String> extractFields(String namedQueryStr) {
+	public static List<String> extractFields(final ClassWrapper<String> namedQueryWrapper) {
 		List<String> fields = new ArrayList<String>();
+		String namedQueryStr = namedQueryWrapper.getValue();
 		int pos;
 
 		while ((pos = namedQueryStr.indexOf(":")) != -1) {
@@ -52,6 +53,7 @@ public class JdbcUtils {
 			fields.add(namedQueryStr.substring(pos + 1, end));
 			namedQueryStr = namedQueryStr.substring(0, pos) + "?" + namedQueryStr.substring(end);
 		}
+		namedQueryWrapper.setValue(namedQueryStr);
 		
 		return fields;
 	}

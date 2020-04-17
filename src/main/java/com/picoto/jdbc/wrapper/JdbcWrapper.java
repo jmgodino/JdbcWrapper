@@ -4,39 +4,57 @@ import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.List;
-
-import javax.sql.DataSource;
 
 public class JdbcWrapper<T> extends JdbcBase {
 
-	private DataSource ds;
+	private Connection con;
 	private boolean autoCommit = false;
+	private boolean autoClose = false;
 
-	public DataSource getDataSource() {
-		return ds;
+	public JdbcWrapper() {
+		super();
+		// TODO Auto-generated constructor stub
 	}
 
-	public void setDataSource(DataSource ds) {
-		if (ds == null) {
-			throw new JdbcWrapperException("No se ha incluido un DataSource válido");
-		}
-		this.ds = ds;
+	public JdbcWrapper(Connection con, boolean autoCommit, boolean autoClose) {
+		super();
+		this.con = con;
+		this.autoCommit = autoCommit;
+		this.autoClose = autoClose;
 	}
 
-	public void setDataSource(DataSource ds, boolean autoCommit) {
-		setDataSource(ds);
+	public Connection getConection() {
+		return con;
+	}
+
+	public void setConnection(Connection con) {
+		this.con = con;
+	}
+
+	public boolean isAutoCommit() {
+		return autoCommit;
+	}
+
+	public void setAutoCommit(boolean autoCommit) {
 		this.autoCommit = autoCommit;
 	}
 
+	public boolean isAutoClose() {
+		return autoClose;
+	}
+
+	public void setAutoClose(boolean autoClose) {
+		this.autoClose = autoClose;
+	}
+
 	public List<T> query(String queryStr, ParameterManager paramManager, RowManagerLambda<T> rowManager) {
-		Connection con = null;
+
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			con = getConnection();
-			if (ds == null) {
+
+			if (con == null) {
 				throw new JdbcWrapperException("Error ejecutando consulta. No hay conexión a BB.DD.");
 			}
 
@@ -67,16 +85,18 @@ public class JdbcWrapper<T> extends JdbcBase {
 		} finally {
 			close(rs);
 			close(ps);
-			close(con);
+			if (isAutoClose()) {
+				close(con);
+			}
 		}
 	}
 
 	public List<T> query(String queryStr, RowManagerLambda<T> rowManager) {
-		Connection con = null;
+
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			con = getConnection();
+
 			if (con == null) {
 				throw new JdbcWrapperException("Error ejecutando consulta. No hay conexión a BB.DD.");
 			}
@@ -104,15 +124,17 @@ public class JdbcWrapper<T> extends JdbcBase {
 		} finally {
 			close(rs);
 			close(ps);
-			close(con);
+			if (isAutoClose()) {
+				close(con);
+			}
 		}
 	}
 
 	public int update(String updateStr, ParameterManager paramManager) {
-		Connection con = null;
+
 		PreparedStatement ps = null;
 		try {
-			con = getConnection();
+
 			if (con == null) {
 				throw new JdbcWrapperException("Error ejecutando update. No hay conexión a BB.DD.");
 			}
@@ -130,28 +152,26 @@ public class JdbcWrapper<T> extends JdbcBase {
 			setter.setStatement(ps);
 			paramManager.configureParameters(setter);
 			int rows = ps.executeUpdate();
+
+			if (isAutoCommit()) {
+				commit(con);
+			}
 			return rows;
 		} catch (Exception e) {
 			throw new JdbcWrapperException("Error ejecutando update", e);
 		} finally {
 			close(ps);
-			close(con);
+			if (isAutoClose()) {
+				close(con);
+			}
 		}
-	}
-
-	private Connection getConnection() throws SQLException {
-		Connection con = ds.getConnection();
-		if (autoCommit) {
-			con.setAutoCommit(true);
-		}
-		return con;
 	}
 
 	public void delete(String updateStr, ParameterManager paramManager) {
-		Connection con = null;
+
 		PreparedStatement ps = null;
 		try {
-			con = getConnection();
+
 			if (con == null) {
 				throw new JdbcWrapperException("Error ejecutando delete. No hay conexión a BB.DD.");
 			}
@@ -169,21 +189,25 @@ public class JdbcWrapper<T> extends JdbcBase {
 			setter.setStatement(ps);
 			paramManager.configureParameters(setter);
 			ps.execute();
+			if (isAutoCommit()) {
+				commit(con);
+			}
 
 		} catch (Exception e) {
 			throw new JdbcWrapperException("Error ejecutando delete", e);
 		} finally {
 			close(ps);
-			close(con);
+			if (isAutoClose()) {
+				close(con);
+			}
 		}
 
 	}
 
 	public void insert(String updateStr, ParameterManager paramManager) {
-		Connection con = null;
+
 		PreparedStatement ps = null;
 		try {
-			con = getConnection();
 
 			if (con == null) {
 				throw new JdbcWrapperException("Error ejecutando insert. No hay conexión a BB.DD.");
@@ -202,22 +226,27 @@ public class JdbcWrapper<T> extends JdbcBase {
 			setter.setStatement(ps);
 			paramManager.configureParameters(setter);
 			ps.execute();
+			if (isAutoCommit()) {
+				commit(con);
+			}
 
 		} catch (Exception e) {
 			throw new JdbcWrapperException("Error ejecutando insert", e);
 		} finally {
 			close(ps);
-			close(con);
+			if (isAutoClose()) {
+				close(con);
+			}
 		}
 
 	}
 
 	public int count(String queryCountStr) {
-		Connection con = null;
+
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			con = getConnection();
+
 			if (con == null) {
 				throw new JdbcWrapperException("Error ejecutando consulta. No hay conexión a BB.DD.");
 			}
@@ -240,13 +269,18 @@ public class JdbcWrapper<T> extends JdbcBase {
 			Cursor c = new Cursor();
 			c.setResultSet(rs);
 			List<Integer> lista = rowManager.mapRow(c);
+			if (lista == null || lista.size() == 0) {
+				throw new JdbcWrapperException("No se han recuperado registros en la consulta tipo COUNT");
+			}
 			return lista.get(0);
 		} catch (Exception e) {
 			throw new JdbcWrapperException("Error ejecutando consulta", e);
 		} finally {
 			close(rs);
 			close(ps);
-			close(con);
+			if (isAutoClose()) {
+				close(con);
+			}
 		}
 
 	}
@@ -278,11 +312,11 @@ public class JdbcWrapper<T> extends JdbcBase {
 
 	public List<T> namedQuery(String namedQueryStr, NamedParameterManager paramManager,
 			RowManagerLambda<T> rowManager) {
-		Connection con = null;
+
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		try {
-			con = getConnection();
+
 			if (con == null) {
 				throw new JdbcWrapperException("Error ejecutando consulta. No hay conexión a BB.DD.");
 			}
@@ -300,10 +334,13 @@ public class JdbcWrapper<T> extends JdbcBase {
 				throw new JdbcWrapperException("Error ejecutando consulta. Es necesario definir un gestor de filas");
 			}
 
-			ps = getPreparedStatement(con, namedQueryStr);
+			ClassWrapper<String> wrap = new ClassWrapper<>();
+			wrap.setValue(namedQueryStr);
+			List<String> fields = JdbcUtils.extractFields(wrap);
+			ps = getPreparedStatement(con, wrap.getValue());
 			NamedParameterSetter setter = new NamedParameterSetter();
 			setter.setStatement(ps);
-			setter.setFields(JdbcUtils.extractFields(namedQueryStr));
+			setter.setFields(fields);
 			paramManager.configureParameters(setter);
 			rs = ps.executeQuery();
 			Cursor c = new Cursor();
@@ -315,16 +352,18 @@ public class JdbcWrapper<T> extends JdbcBase {
 		} finally {
 			close(rs);
 			close(ps);
-			close(con);
+			if (isAutoClose()) {
+				close(con);
+			}
 		}
 	}
 
 	public void callProcedure(String procedureStr, ProcedureParameterManager paramManager,
 			ProcedureOutputParameterManager resultManager, boolean isFunction) {
-		Connection con = null;
+
 		CallableStatement cs = null;
 		try {
-			con = getConnection();
+
 			if (con == null) {
 				throw new JdbcWrapperException("Error ejecutando PA. No hay conexión a BB.DD.");
 			}
@@ -352,11 +391,17 @@ public class JdbcWrapper<T> extends JdbcBase {
 			getter.setCallableStatement(cs);
 			resultManager.getOutputParameters(getter);
 
+			if (autoCommit) {
+				commit(con);
+			}
+
 		} catch (Exception e) {
 			throw new JdbcWrapperException("Error ejecutando PA", e);
 		} finally {
 			close(cs);
-			close(con);
+			if (isAutoClose()) {
+				close(con);
+			}
 		}
 
 	}
@@ -370,10 +415,10 @@ public class JdbcWrapper<T> extends JdbcBase {
 	 * @return
 	 */
 	public JdbcQuery<T> getQuery(String namedQueryStr) {
-		Connection con = null;
+
 		PreparedStatement ps = null;
 		try {
-			con = getConnection();
+
 			if (con == null) {
 				throw new JdbcWrapperException("Error generando consulta inline. No hay conexión a BB.DD.");
 			}
@@ -388,8 +433,8 @@ public class JdbcWrapper<T> extends JdbcBase {
 		} catch (Exception e) {
 			throw new JdbcWrapperException("Error generando consulta inline", e);
 		} finally {
-			// En este caso no cerramos nada...
+			// En este caso no cerramos nada, se cierra despues, tras leer el cursor...
 		}
 	}
-	
+
 }
