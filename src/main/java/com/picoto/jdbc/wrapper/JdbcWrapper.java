@@ -18,6 +18,21 @@ public class JdbcWrapper<T> extends JdbcBase {
 		// TODO Auto-generated constructor stub
 	}
 
+	public JdbcWrapper(Connection con) {
+		super();
+		this.con = con;
+		this.autoCommit = false;
+		this.autoClose = false;
+	}
+
+	
+	public JdbcWrapper(Connection con, boolean autoCommit) {
+		super();
+		this.con = con;
+		this.autoCommit = autoCommit;
+		this.autoClose = false;
+	}
+	
 	public JdbcWrapper(Connection con, boolean autoCommit, boolean autoClose) {
 		super();
 		this.con = con;
@@ -25,7 +40,7 @@ public class JdbcWrapper<T> extends JdbcBase {
 		this.autoClose = autoClose;
 	}
 
-	public Connection getConection() {
+	protected Connection getConection() {
 		return con;
 	}
 
@@ -429,7 +444,30 @@ public class JdbcWrapper<T> extends JdbcBase {
 	 * @param namedQueryStr
 	 * @return
 	 */
-	public JdbcQuery<T> getQuery(String namedQueryStr) {
+	public JdbcQuery<T> getQuery(String queryStr) {
+
+		PreparedStatement ps = null;
+		try {
+
+			if (con == null) {
+				throw new JdbcWrapperException("Error generando consulta inline. No hay conexión a BB.DD.");
+			}
+
+			if (queryStr == null) {
+				throw new JdbcWrapperException("Error generando consulta inline. No se ha definido la consulta");
+			}
+
+			ps = getPreparedStatement(con, queryStr);
+			JdbcQuery<T> execQuery = new JdbcQuery<T>(ps);
+			return execQuery;
+		} catch (Exception e) {
+			throw new JdbcWrapperException("Error generando consulta inline", e);
+		} finally {
+			// En este caso no cerramos nada, se cierra despues, tras leer el cursor...
+		}
+	}
+	
+	public JdbcNamedQuery<T> getNamedQuery(String namedQueryStr) {
 
 		PreparedStatement ps = null;
 		try {
@@ -441,14 +479,71 @@ public class JdbcWrapper<T> extends JdbcBase {
 			if (namedQueryStr == null) {
 				throw new JdbcWrapperException("Error generando consulta inline. No se ha definido la consulta");
 			}
-
-			ps = getPreparedStatement(con, namedQueryStr);
-			JdbcQuery<T> execQuery = new JdbcQuery<T>(ps);
+			
+			ClassWrapper<String> wrap = new ClassWrapper<>();
+			wrap.setValue(namedQueryStr);
+			List<String> fields = JdbcUtils.extractFields(wrap);
+			ps = getPreparedStatement(con, wrap.getValue());
+			NamedParameterSetter setter = new NamedParameterSetter();
+			setter.setStatement(ps);
+			setter.setFields(fields);
+			
+			JdbcNamedQuery<T> execQuery = new JdbcNamedQuery<T>(ps);
+			execQuery.configureParameters(setter);
 			return execQuery;
 		} catch (Exception e) {
 			throw new JdbcWrapperException("Error generando consulta inline", e);
 		} finally {
 			// En este caso no cerramos nada, se cierra despues, tras leer el cursor...
+		}
+	}
+
+	
+	public T getRecord(String queryStr, ParameterManager paramManager, RowManagerLambda<T> rowManager) {
+
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		try {
+
+			if (con == null) {
+				throw new JdbcWrapperException("Error ejecutando consulta de registro único. No hay conexión a BB.DD.");
+			}
+
+			if (queryStr == null) {
+				throw new JdbcWrapperException("Error ejecutando  consulta de registro único. No se ha definido la consulta");
+			}
+
+			if (paramManager == null) {
+				throw new JdbcWrapperException(
+						"Error ejecutando  consulta de registro único. Es necesario definir un gestor de parámetros");
+			}
+
+			if (rowManager == null) {
+				throw new JdbcWrapperException("Error ejecutando  consulta de registro único. Es necesario definir un gestor de filas");
+			}
+
+			ps = getPreparedStatement(con, queryStr);
+			ParameterSetter setter = new ParameterSetter();
+			setter.setStatement(ps);
+			paramManager.configureParameters(setter);
+			rs = ps.executeQuery();
+			Cursor cursor = new Cursor();
+			cursor.setResultSet(rs);
+
+			if (rs.next()) {
+				return rowManager.mapRow(cursor);
+			} else {
+				throw new JdbcWrapperException("Error ejecutando consulta de registro único. No se han encontrado registros");
+			}
+
+		} catch (Exception e) {
+			throw new JdbcWrapperException("Error ejecutando consulta", e);
+		} finally {
+			close(rs);
+			close(ps);
+			if (isAutoClose()) {
+				close(con);
+			}
 		}
 	}
 

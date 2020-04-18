@@ -19,7 +19,7 @@ public class Cursor {
 		this.resultSet = resultSet;
 	}
 
-	public ResultSet getResultSet() {
+	protected ResultSet getResultSet() {
 		return resultSet;
 	}
 

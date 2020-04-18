@@ -5,7 +5,6 @@ import java.io.FileInputStream;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -133,6 +132,29 @@ public class JdbcWrapperTest {
 	}
 
 	@Test
+	public void recuperarLibro() {
+		JdbcWrapper<Libro> testWrap = new JdbcWrapper<>(getConnection(), false, true);
+
+		Libro libro = testWrap.getRecord("select titulo, isbn, fecha, precio, texto from libros where isbn = ?", ps -> {
+			ps.setInt(1, 2);
+		}, c -> {
+			Libro l = new Libro();
+			l.setTitulo(c.getString(1));
+			l.setIsbn(c.getInt(2));
+			l.setFecha(c.getDate(3));
+			l.setPrecio(c.getBigDecimal(4));
+			l.setTexto(c.getClobAsString(5));
+			return l;
+		});
+
+		JdbcWrapper.debug("* Libro unicorecuperado por ISBN");
+		JdbcWrapper.debug(libro.toString());
+
+		Assert.assertNotNull(libro);
+
+	}
+
+	@Test
 	public void crearLibro() {
 		JdbcWrapper<Libro> testWrap = new JdbcWrapper<Libro>(getConnection(), true, true);
 		testWrap.insert("insert into libros (isbn, titulo, fecha, precio, texto) values (?, ?, ?, ?, ?)", ps -> {
@@ -167,7 +189,7 @@ public class JdbcWrapperTest {
 	}
 
 	@Test
-	public void consultaLibro2() {
+	public void consultaLibroNamedParameter() {
 		JdbcWrapper<Libro> testWrap = new JdbcWrapper<>(getConnection(), false, true);
 
 		List<Libro> libros = testWrap.namedQuery(
@@ -218,7 +240,47 @@ public class JdbcWrapperTest {
 	}
 
 	@Test
-	public void consultaLibroEstiloCascada() throws ParseException {
+	public void getLibro() throws ParseException {
+		JdbcWrapper<Libro> testWrap = new JdbcWrapper<>(getConnection(), false, true);
+		Libro libro = testWrap.getQuery(
+				"select titulo, isbn, fecha, precio, texto from libros where ISBN = ? and titulo = ? and precio = ? and fecha = ?")
+				.parameterInteger(1).parameterString("El señor de los anillos")
+				.parameterBigDecimal(new BigDecimal("12.34")).parameterDate(new Date()).getObject(Libro.class);
+
+		JdbcWrapper.debug("********************* Libro recuperado ***************************");
+		JdbcWrapper.debug(libro.toString());
+		JdbcWrapper.debug("********************* ----------------------- ***************************");
+
+		Assert.assertNotNull(libro);
+
+	}
+
+	@Test
+	public void getLibroConMapper() throws ParseException {
+		JdbcWrapper<Libro> testWrap = new JdbcWrapper<>(getConnection(), false, true);
+		Libro libro = testWrap.getQuery(
+				"select titulo, isbn, fecha, precio, texto from libros where ISBN = ? and titulo = ? and precio = ? and fecha = ?")
+				.parameterInteger(1).parameterString("El señor de los anillos")
+				.parameterBigDecimal(new BigDecimal("12.34")).parameterDate(new Date()).getMappedObject(c -> {
+					Libro l = new Libro();
+					l.setTitulo(c.getString(1));
+					l.setIsbn(c.getInt(2));
+					l.setFecha(c.getDate(3));
+					l.setPrecio(c.getBigDecimal(4));
+					l.setTexto(c.getClobAsString(5));
+					return l;
+				});
+
+		JdbcWrapper.debug("********************* Libro recuperado ***************************");
+		JdbcWrapper.debug(libro.toString());
+		JdbcWrapper.debug("********************* ----------------------- ***************************");
+
+		Assert.assertNotNull(libro);
+
+	}
+
+	@Test
+	public void consultaLibroEstiloCascadaSinMapper() throws ParseException {
 		JdbcWrapper<Libro> testWrap = new JdbcWrapper<>(getConnection(), false, true);
 		List<Libro> libros = testWrap.getQuery(
 				"select titulo, isbn, fecha, precio, texto from libros where ISBN = ? and titulo = ? and precio = ? and fecha = ?")
@@ -236,14 +298,13 @@ public class JdbcWrapperTest {
 	}
 
 	@Test
-	public void consultaLibroEstiloCascada2() throws ParseException {
+	public void consultaLibroEstiloCascadaConMapper() throws ParseException {
 		JdbcWrapper<Libro> testWrap = new JdbcWrapper<>(getConnection(), false, true);
-
 
 		List<Libro> libros = testWrap.getQuery(
 				"select titulo, isbn, fecha, precio, texto from libros where ISBN = ? and titulo = ? and precio = ? and fecha = ?")
 				.parameterInteger(1).parameterString("El señor de los anillos")
-				.parameterBigDecimal(new BigDecimal("12.34")).parameterDate(new Date()).executeMapperQuery(c -> {
+				.parameterBigDecimal(new BigDecimal("12.34")).parameterDate(new Date()).executeMappedQuery(c -> {
 					Libro l = new Libro();
 					l.setTitulo(c.getString(1));
 					l.setIsbn(c.getInt(2));
@@ -254,6 +315,69 @@ public class JdbcWrapperTest {
 				});
 
 		JdbcWrapper.debug("********************* Libros consulta inline ***************************");
+		for (Libro l : libros) {
+			JdbcWrapper.debug(l.toString());
+		}
+		JdbcWrapper.debug("********************* ----------------------- ***************************");
+
+		Assert.assertEquals(1, libros.size());
+
+	}
+
+	@Test
+	public void consultaLibroEstiloCascadaParametrosNombreSinMapper() throws ParseException {
+		JdbcWrapper<Libro> testWrap = new JdbcWrapper<>(getConnection(), false, true);
+		List<Libro> libros = testWrap.getNamedQuery(
+				"select titulo, isbn, fecha, precio, texto from libros where ISBN = :isbn and titulo = :titulo and precio = :precio and fecha = :fecha")
+				.parameterInteger("isbn", 1).parameterString("titulo", "El señor de los anillos")
+				.parameterBigDecimal("precio", new BigDecimal("12.34")).parameterDate("fecha", new Date())
+				.executeQuery(Libro.class);
+
+		JdbcWrapper.debug("********************* Libros consulta inline named no mapper ***************************");
+		for (Libro l : libros) {
+			JdbcWrapper.debug(l.toString());
+		}
+		JdbcWrapper.debug("********************* ----------------------- ***************************");
+
+		Assert.assertEquals(1, libros.size());
+
+	}
+	
+	@Test
+	public void consultaLibroEstiloCascadaParametrosNombreSinMapperTotal() throws ParseException {
+		JdbcWrapper<Libro> testWrap = new JdbcWrapper<>(getConnection(), false, true);
+		List<Libro> libros = testWrap.getNamedQuery(
+				"select titulo, isbn, fecha, precio, texto from libros")
+				.executeQuery(Libro.class);
+
+		JdbcWrapper.debug("********************* Libros consulta inline named no mapper all ***************************");
+		for (Libro l : libros) {
+			JdbcWrapper.debug(l.toString());
+		}
+		JdbcWrapper.debug("********************* ----------------------- ***************************");
+
+		Assert.assertEquals(2, libros.size());
+
+	}
+	
+	@Test
+	public void consultaLibroEstiloCascadaParametrosNombreConMapper() throws ParseException {
+		JdbcWrapper<Libro> testWrap = new JdbcWrapper<>(getConnection(), false, true);
+		List<Libro> libros = testWrap.getNamedQuery(
+				"select titulo, isbn, fecha, precio, texto from libros where ISBN = :isbn and titulo = :titulo and precio = :precio and fecha = :fecha")
+				.parameterInteger("isbn", 1).parameterString("titulo", "El señor de los anillos")
+				.parameterBigDecimal("precio", new BigDecimal("12.34")).parameterDate("fecha", new Date())
+				.executeMappedQuery(c -> {
+					Libro l = new Libro();
+					l.setTitulo(c.getString(1));
+					l.setIsbn(c.getInt(2));
+					l.setFecha(c.getDate(3));
+					l.setPrecio(c.getBigDecimal(4));
+					l.setTexto(c.getClobAsString(5));
+					return l;
+				});
+
+		JdbcWrapper.debug("********************* Libros consulta inline nanmed and mapper ***************************");
 		for (Libro l : libros) {
 			JdbcWrapper.debug(l.toString());
 		}
