@@ -25,14 +25,13 @@ public class JdbcWrapper<T> extends JdbcBase {
 		this.autoClose = false;
 	}
 
-	
 	public JdbcWrapper(Connection con, boolean autoCommit) {
 		super();
 		this.con = con;
 		this.autoCommit = autoCommit;
 		this.autoClose = false;
 	}
-	
+
 	public JdbcWrapper(Connection con, boolean autoCommit, boolean autoClose) {
 		super();
 		this.con = con;
@@ -388,6 +387,11 @@ public class JdbcWrapper<T> extends JdbcBase {
 		}
 	}
 
+	public void callFunction(String procedureStr, ProcedureParameterManager paramManager,
+			ProcedureOutputParameterManager resultManager) {
+		callProcedure(procedureStr, paramManager, resultManager, true);
+	}
+
 	public void callProcedure(String procedureStr, ProcedureParameterManager paramManager,
 			ProcedureOutputParameterManager resultManager, boolean isFunction) {
 
@@ -466,7 +470,7 @@ public class JdbcWrapper<T> extends JdbcBase {
 			// En este caso no cerramos nada, se cierra despues, tras leer el cursor...
 		}
 	}
-	
+
 	public JdbcNamedQuery<T> getNamedQuery(String namedQueryStr) {
 
 		PreparedStatement ps = null;
@@ -479,7 +483,7 @@ public class JdbcWrapper<T> extends JdbcBase {
 			if (namedQueryStr == null) {
 				throw new JdbcWrapperException("Error generando consulta inline. No se ha definido la consulta");
 			}
-			
+
 			ClassWrapper<String> wrap = new ClassWrapper<>();
 			wrap.setValue(namedQueryStr);
 			List<String> fields = JdbcUtils.extractFields(wrap);
@@ -487,7 +491,7 @@ public class JdbcWrapper<T> extends JdbcBase {
 			NamedParameterSetter setter = new NamedParameterSetter();
 			setter.setStatement(ps);
 			setter.setFields(fields);
-			
+
 			JdbcNamedQuery<T> execQuery = new JdbcNamedQuery<T>(ps);
 			execQuery.configureParameters(setter);
 			return execQuery;
@@ -498,7 +502,6 @@ public class JdbcWrapper<T> extends JdbcBase {
 		}
 	}
 
-	
 	public T getRecord(String queryStr, ParameterManager paramManager, RowManagerLambda<T> rowManager) {
 
 		PreparedStatement ps = null;
@@ -510,7 +513,8 @@ public class JdbcWrapper<T> extends JdbcBase {
 			}
 
 			if (queryStr == null) {
-				throw new JdbcWrapperException("Error ejecutando  consulta de registro único. No se ha definido la consulta");
+				throw new JdbcWrapperException(
+						"Error ejecutando  consulta de registro único. No se ha definido la consulta");
 			}
 
 			if (paramManager == null) {
@@ -519,7 +523,8 @@ public class JdbcWrapper<T> extends JdbcBase {
 			}
 
 			if (rowManager == null) {
-				throw new JdbcWrapperException("Error ejecutando  consulta de registro único. Es necesario definir un gestor de filas");
+				throw new JdbcWrapperException(
+						"Error ejecutando  consulta de registro único. Es necesario definir un gestor de filas");
 			}
 
 			ps = getPreparedStatement(con, queryStr);
@@ -533,7 +538,8 @@ public class JdbcWrapper<T> extends JdbcBase {
 			if (rs.next()) {
 				return rowManager.mapRow(cursor);
 			} else {
-				throw new JdbcWrapperException("Error ejecutando consulta de registro único. No se han encontrado registros");
+				throw new JdbcWrapperException(
+						"Error ejecutando consulta de registro único. No se han encontrado registros");
 			}
 
 		} catch (Exception e) {

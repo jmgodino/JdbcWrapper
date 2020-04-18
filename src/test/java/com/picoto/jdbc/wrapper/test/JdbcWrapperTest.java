@@ -82,12 +82,12 @@ public class JdbcWrapperTest {
 		final ClassWrapper<String> wrapper = new ClassWrapper<String>();
 		JdbcWrapper<Libro> testWrap = new JdbcWrapper<>(getConnection(), false, true);
 
-		testWrap.callProcedure("EJEMPLOPAFUNC(?)", cs -> {
+		testWrap.callFunction("EJEMPLOPAFUNC(?)", cs -> {
 			cs.registrarSalidaString(1);
 			cs.registrarEntradaInt(2, 4);
 		}, cso -> {
 			wrapper.setValue(cso.getString(1));
-		}, true);
+		});
 
 		JdbcWrapper.debug("* Recuperar libro desde PA con format de funcion:  " + wrapper.getValue());
 		Assert.assertEquals("Los limites de la fundacion", wrapper.getValue());
@@ -342,15 +342,15 @@ public class JdbcWrapperTest {
 		Assert.assertEquals(1, libros.size());
 
 	}
-	
+
 	@Test
 	public void consultaLibroEstiloCascadaParametrosNombreSinMapperTotal() throws ParseException {
 		JdbcWrapper<Libro> testWrap = new JdbcWrapper<>(getConnection(), false, true);
-		List<Libro> libros = testWrap.getNamedQuery(
-				"select titulo, isbn, fecha, precio, texto from libros")
+		List<Libro> libros = testWrap.getNamedQuery("select titulo, isbn, fecha, precio, texto from libros")
 				.executeQuery(Libro.class);
 
-		JdbcWrapper.debug("********************* Libros consulta inline named no mapper all ***************************");
+		JdbcWrapper
+				.debug("********************* Libros consulta inline named no mapper all ***************************");
 		for (Libro l : libros) {
 			JdbcWrapper.debug(l.toString());
 		}
@@ -359,7 +359,7 @@ public class JdbcWrapperTest {
 		Assert.assertEquals(2, libros.size());
 
 	}
-	
+
 	@Test
 	public void consultaLibroEstiloCascadaParametrosNombreConMapper() throws ParseException {
 		JdbcWrapper<Libro> testWrap = new JdbcWrapper<>(getConnection(), false, true);
