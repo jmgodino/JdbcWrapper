@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -76,9 +77,12 @@ public class JdbcQuery<T> extends JdbcBase {
 		PreparedStatement ps = paramSetter.getStatement();
 		try {
 			rs = ps.executeQuery();
-			Cursor c = new Cursor();
-			c.setResultSet(rs);
-			List<T> lista = rowManager.mapRow(c);
+			Cursor cursor = new Cursor();
+			cursor.setResultSet(rs);
+			List<T> lista = new LinkedList<>();
+			while (rs.next()) {
+				lista.add(rowManager.mapRow(cursor));
+			}
 			return lista;
 
 		} catch (Exception e) {

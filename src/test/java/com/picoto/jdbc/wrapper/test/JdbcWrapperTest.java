@@ -6,7 +6,6 @@ import java.math.BigDecimal;
 import java.sql.Connection;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -52,7 +51,7 @@ public class JdbcWrapperTest {
 			throw new JdbcWrapperException("No hay conexión con BB.DD.");
 		}
 	}
-	
+
 	private Connection getConnection() {
 		try {
 			return ds.getConnection();
@@ -115,18 +114,13 @@ public class JdbcWrapperTest {
 				ps -> {
 					ps.setInt(1, 2);
 				}, c -> {
-
-					List<Libro> lista = new ArrayList<Libro>(100);
-					while (c.next()) {
-						Libro l = new Libro();
-						l.setTitulo(c.getString(1));
-						l.setIsbn(c.getInt(2));
-						l.setFecha(c.getDate(3));
-						l.setPrecio(c.getBigDecimal(4));
-						l.setTexto(c.getClobAsString(5));
-						lista.add(l);
-					}
-					return lista;
+					Libro l = new Libro();
+					l.setTitulo(c.getString(1));
+					l.setIsbn(c.getInt(2));
+					l.setFecha(c.getDate(3));
+					l.setPrecio(c.getBigDecimal(4));
+					l.setTexto(c.getClobAsString(5));
+					return l;
 				});
 
 		JdbcWrapper.debug("* Libros recuperados por ISBN");
@@ -181,18 +175,13 @@ public class JdbcWrapperTest {
 					np.setInt("isbn", 1);
 					np.setString("titulo", "El señor de los anillos");
 				}, c -> {
-
-					List<Libro> lista = new ArrayList<Libro>(100);
-					while (c.next()) {
-						Libro l = new Libro();
-						l.setTitulo(c.getString(1));
-						l.setIsbn(c.getInt(2));
-						l.setFecha(c.getDate(3));
-						l.setPrecio(c.getBigDecimal(4));
-						l.setTexto(c.getClobAsString(5));
-						lista.add(l);
-					}
-					return lista;
+					Libro l = new Libro();
+					l.setTitulo(c.getString(1));
+					l.setIsbn(c.getInt(2));
+					l.setFecha(c.getDate(3));
+					l.setPrecio(c.getBigDecimal(4));
+					l.setTexto(c.getClobAsString(5));
+					return l;
 				});
 
 		JdbcWrapper.debug("* Libros recuperados por ISBN y título");
@@ -209,18 +198,13 @@ public class JdbcWrapperTest {
 		JdbcWrapper<Libro> testWrap = new JdbcWrapper<>(getConnection(), false, true);
 
 		List<Libro> libros = testWrap.query("select titulo, isbn, fecha, precio, texto from libros", c -> {
-
-			List<Libro> lista = new ArrayList<Libro>(100);
-			while (c.next()) {
-				Libro l = new Libro();
-				l.setTitulo(c.getString(1));
-				l.setIsbn(c.getInt(2));
-				l.setFecha(c.getDate(3));
-				l.setPrecio(c.getBigDecimal(4));
-				l.setTexto(c.getClobAsString(5));
-				lista.add(l);
-			}
-			return lista;
+			Libro l = new Libro();
+			l.setTitulo(c.getString(1));
+			l.setIsbn(c.getInt(2));
+			l.setFecha(c.getDate(3));
+			l.setPrecio(c.getBigDecimal(4));
+			l.setTexto(c.getClobAsString(5));
+			return l;
 		});
 
 		JdbcWrapper.debug("********************* Libros en la biblioteca ***************************");
@@ -236,12 +220,10 @@ public class JdbcWrapperTest {
 	@Test
 	public void consultaLibroEstiloCascada() throws ParseException {
 		JdbcWrapper<Libro> testWrap = new JdbcWrapper<>(getConnection(), false, true);
-		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-		Date fecha = sdf.parse("17/04/2020");
 		List<Libro> libros = testWrap.getQuery(
 				"select titulo, isbn, fecha, precio, texto from libros where ISBN = ? and titulo = ? and precio = ? and fecha = ?")
 				.parameterInteger(1).parameterString("El señor de los anillos")
-				.parameterBigDecimal(new BigDecimal("12.34")).parameterDate(fecha).executeQuery(Libro.class);
+				.parameterBigDecimal(new BigDecimal("12.34")).parameterDate(new Date()).executeQuery(Libro.class);
 
 		JdbcWrapper.debug("********************* Libros consulta inline ***************************");
 		for (Libro l : libros) {
@@ -257,23 +239,18 @@ public class JdbcWrapperTest {
 	public void consultaLibroEstiloCascada2() throws ParseException {
 		JdbcWrapper<Libro> testWrap = new JdbcWrapper<>(getConnection(), false, true);
 
-		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-		Date fecha = sdf.parse("17/04/2020");
+
 		List<Libro> libros = testWrap.getQuery(
 				"select titulo, isbn, fecha, precio, texto from libros where ISBN = ? and titulo = ? and precio = ? and fecha = ?")
 				.parameterInteger(1).parameterString("El señor de los anillos")
-				.parameterBigDecimal(new BigDecimal("12.34")).parameterDate(fecha).executeMapperQuery(c -> {
-					List<Libro> lista = new ArrayList<Libro>(100);
-					while (c.next()) {
-						Libro l = new Libro();
-						l.setTitulo(c.getString(1));
-						l.setIsbn(c.getInt(2));
-						l.setFecha(c.getDate(3));
-						l.setPrecio(c.getBigDecimal(4));
-						l.setTexto(c.getClobAsString(5));
-						lista.add(l);
-					}
-					return lista;
+				.parameterBigDecimal(new BigDecimal("12.34")).parameterDate(new Date()).executeMapperQuery(c -> {
+					Libro l = new Libro();
+					l.setTitulo(c.getString(1));
+					l.setIsbn(c.getInt(2));
+					l.setFecha(c.getDate(3));
+					l.setPrecio(c.getBigDecimal(4));
+					l.setTexto(c.getClobAsString(5));
+					return l;
 				});
 
 		JdbcWrapper.debug("********************* Libros consulta inline ***************************");

@@ -4,6 +4,7 @@ import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.LinkedList;
 import java.util.List;
 
 public class JdbcWrapper<T> extends JdbcBase {
@@ -78,7 +79,12 @@ public class JdbcWrapper<T> extends JdbcBase {
 			rs = ps.executeQuery();
 			Cursor cursor = new Cursor();
 			cursor.setResultSet(rs);
-			List<T> lista = rowManager.mapRow(cursor);
+
+			List<T> lista = new LinkedList<>();
+			while (rs.next()) {
+				lista.add(rowManager.mapRow(cursor));
+			}
+
 			return lista;
 		} catch (Exception e) {
 			throw new JdbcWrapperException("Error ejecutando consulta", e);
@@ -117,7 +123,11 @@ public class JdbcWrapper<T> extends JdbcBase {
 			rs = ps.executeQuery();
 			Cursor cursor = new Cursor();
 			cursor.setResultSet(rs);
-			List<T> lista = rowManager.mapRow(cursor);
+
+			List<T> lista = new LinkedList<>();
+			while (rs.next()) {
+				lista.add(rowManager.mapRow(cursor));
+			}
 			return lista;
 		} catch (Exception e) {
 			throw new JdbcWrapperException("Error ejecutando consulta", e);
@@ -268,11 +278,12 @@ public class JdbcWrapper<T> extends JdbcBase {
 			CountRecordsRowManagerImpl rowManager = new CountRecordsRowManagerImpl();
 			Cursor c = new Cursor();
 			c.setResultSet(rs);
-			List<Integer> lista = rowManager.mapRow(c);
-			if (lista == null || lista.size() == 0) {
+			if (rs.next()) {
+				return rowManager.mapRow(c);
+			} else {
 				throw new JdbcWrapperException("No se han recuperado registros en la consulta tipo COUNT");
 			}
-			return lista.get(0);
+
 		} catch (Exception e) {
 			throw new JdbcWrapperException("Error ejecutando consulta", e);
 		} finally {
@@ -343,9 +354,13 @@ public class JdbcWrapper<T> extends JdbcBase {
 			setter.setFields(fields);
 			paramManager.configureParameters(setter);
 			rs = ps.executeQuery();
-			Cursor c = new Cursor();
-			c.setResultSet(rs);
-			List<T> lista = rowManager.mapRow(c);
+			Cursor cursor = new Cursor();
+			cursor.setResultSet(rs);
+
+			List<T> lista = new LinkedList<>();
+			while (rs.next()) {
+				lista.add(rowManager.mapRow(cursor));
+			}
 			return lista;
 		} catch (Exception e) {
 			throw new JdbcWrapperException("Error ejecutando named query", e);
