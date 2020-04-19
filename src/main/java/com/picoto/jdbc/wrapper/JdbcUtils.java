@@ -5,7 +5,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 public class JdbcUtils {
 	
@@ -45,8 +48,12 @@ public class JdbcUtils {
 		int pos;
 
 		while ((pos = namedQueryStr.indexOf(":")) != -1) {
-			int end = namedQueryStr.substring(pos).indexOf(" ");
-			if (end == -1)
+			int end1 = namedQueryStr.substring(pos).indexOf(" ");
+			int end2 = namedQueryStr.substring(pos).indexOf(",");
+			int end3 = namedQueryStr.substring(pos).indexOf(")");
+			Optional<Integer> optionalEnd = Arrays.asList(end1, end2, end3).stream().filter(n -> n > 0).min(Comparator.comparing(Integer::valueOf));
+			int end = optionalEnd.orElse(0);
+			if (end1 == -1 && end2 == -1 && end3 == -1)
 				end = namedQueryStr.length();
 			else
 				end += pos;
