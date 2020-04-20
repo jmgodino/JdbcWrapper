@@ -17,6 +17,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.picoto.jdbc.wrapper.JdbcNamedWrapper;
+import com.picoto.jdbc.wrapper.JdbcWrapper;
 import com.picoto.jdbc.wrapper.JdbcWrapperException;
 import com.picoto.jdbc.wrapper.JdbcWrapperFactory;
 
@@ -186,4 +187,53 @@ public class JdbcNamedWrapperTest {
 
 	}
 
+	@Test
+	public void contarLibros() {
+		JdbcNamedWrapper<Libro> testWrap = JdbcWrapperFactory.getJdbcNamedWrapper(Libro.class, getConnection(), false, true);
+
+		int total = testWrap.count("select count(*) from libros");
+
+		testWrap.debug("* Contando libros");
+		testWrap.debug("Total libros: " + total);
+		Assert.assertEquals(2, total);
+
+	}
+	
+	@Test
+	public void contarLibrosFiltro() {
+		JdbcNamedWrapper<Libro> testWrap = JdbcWrapperFactory.getJdbcNamedWrapper(Libro.class, getConnection(), false, true);
+
+		int total = testWrap.count("select count(*) from libros where ISBN = :isbn", ps -> {
+			ps.setInt("isbn", 1);
+		});
+
+		testWrap.debug("* Contando libros con filtro por isbn");
+		testWrap.debug("Total libros: " + total);
+		Assert.assertEquals(1, total);
+
+	}
+	
+	@Test
+	public void recuperarLibro() {
+		JdbcNamedWrapper<Libro> testWrap = JdbcWrapperFactory.getJdbcNamedWrapper(Libro.class, getConnection(), false, true);
+
+		Libro libro = testWrap.getObject("select titulo, isbn, fecha, precio, texto from libros where isbn = :isbn", ps -> {
+			ps.setInt("isbn", 2);
+		}, c -> {
+			Libro l = new Libro();
+			l.setTitulo(c.getString(1));
+			l.setIsbn(c.getInt(2));
+			l.setFecha(c.getDate(3));
+			l.setPrecio(c.getBigDecimal(4));
+			l.setTexto(c.getClobAsString(5));
+			return l;
+		});
+
+		testWrap.debug("* Libro unicorecuperado por ISBN");
+		testWrap.debug(libro.toString());
+
+		Assert.assertNotNull(libro);
+
+	}
+	
 }

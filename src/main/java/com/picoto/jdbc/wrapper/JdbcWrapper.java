@@ -23,6 +23,8 @@ public interface JdbcWrapper<T> {
 
 	int count(String queryCountStr);
 
+	int count(String queryCountStr, ParameterManager paramManager);
+	
 	void callFunction(String procedureStr, ProcedureParameterManager paramManager,
 			ProcedureOutputParameterManager resultManager);
 
@@ -31,7 +33,7 @@ public interface JdbcWrapper<T> {
 
 	JdbcQuery<T> getQuery(String queryStr);
 
-	T getRecord(String queryStr, ParameterManager paramManager, RowManagerLambda<T> rowManager);
+	T getObject(String queryStr, ParameterManager paramManager, RowManagerLambda<T> rowManager);
 	
 	void debug(String message);
 

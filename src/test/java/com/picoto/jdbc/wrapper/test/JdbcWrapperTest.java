@@ -105,6 +105,20 @@ public class JdbcWrapperTest {
 		Assert.assertEquals(2, total);
 
 	}
+	
+	@Test
+	public void contarLibrosFiltro() {
+		JdbcWrapper<Libro> testWrap = JdbcWrapperFactory.getJdbcWrapper(Libro.class, getConnection(), false, true);
+
+		int total = testWrap.count("select count(*) from libros where ISBN = ?", ps -> {
+			ps.setInt(1, 1);
+		});
+
+		testWrap.debug("* Contando libros con filtro por isbn");
+		testWrap.debug("Total libros: " + total);
+		Assert.assertEquals(1, total);
+
+	}
 
 	@Test
 	public void consultarLibro() {
@@ -136,7 +150,7 @@ public class JdbcWrapperTest {
 	public void recuperarLibro() {
 		JdbcWrapper<Libro> testWrap = JdbcWrapperFactory.getJdbcWrapper(Libro.class, getConnection(), false, true);
 
-		Libro libro = testWrap.getRecord("select titulo, isbn, fecha, precio, texto from libros where isbn = ?", ps -> {
+		Libro libro = testWrap.getObject("select titulo, isbn, fecha, precio, texto from libros where isbn = ?", ps -> {
 			ps.setInt(1, 2);
 		}, c -> {
 			Libro l = new Libro();

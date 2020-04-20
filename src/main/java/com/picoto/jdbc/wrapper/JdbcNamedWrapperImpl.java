@@ -333,6 +333,55 @@ public class JdbcNamedWrapperImpl<T> extends JdbcBase implements JdbcNamedWrappe
 
 	}
 
+	@Override
+	public int count(String queryCountStr, NamedParameterManager paramManager) {
+
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		try {
+
+			if (con == null) {
+				throw new JdbcWrapperException("Error ejecutando consulta. No hay conexión a BB.DD.");
+			}
+
+			if (queryCountStr == null) {
+				throw new JdbcWrapperException("Error ejecutando consulta. No se ha definido la consulta");
+			}
+
+			if (queryCountStr.toUpperCase().indexOf("COUNT") < 0) {
+				throw new JdbcWrapperException("Error ejecutando consulta. No es una consulta de tipo COUNT");
+			}
+
+			ClassWrapper<String> wrap = new ClassWrapper<>();
+			wrap.setValue(queryCountStr);
+			List<String> fields = JdbcUtils.extractFields(wrap);
+			ps = getPreparedStatement(con, wrap.getValue());
+			NamedParameterSetter setter = new NamedParameterSetter();
+			setter.setStatement(ps);
+			setter.setFields(fields);
+			paramManager.configureParameters(setter);
+
+			rs = ps.executeQuery();
+			CountRecordsRowManagerImpl rowManager = new CountRecordsRowManagerImpl();
+			Cursor c = new Cursor();
+			c.setResultSet(rs);
+			if (rs.next()) {
+				return rowManager.mapRow(c);
+			} else {
+				throw new JdbcWrapperException("No se han recuperado registros en la consulta tipo COUNT");
+			}
+
+		} catch (Exception e) {
+			throw new JdbcWrapperException("Error ejecutando consulta", e);
+		} finally {
+			close(rs);
+			close(ps);
+			if (isAutoClose()) {
+				close(con);
+			}
+		}
+
+	}
 
 	@Override
 	public JdbcNamedQuery<T> getQuery(String namedQueryStr) {
@@ -367,7 +416,7 @@ public class JdbcNamedWrapperImpl<T> extends JdbcBase implements JdbcNamedWrappe
 	}
 
 	@Override
-	public T getRecord(String queryStr, NamedParameterManager paramManager, RowManagerLambda<T> rowManager) {
+	public T getObject(String namedQueryStr, NamedParameterManager paramManager, RowManagerLambda<T> rowManager) {
 
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -377,7 +426,7 @@ public class JdbcNamedWrapperImpl<T> extends JdbcBase implements JdbcNamedWrappe
 				throw new JdbcWrapperException("Error ejecutando consulta de registro único. No hay conexión a BB.DD.");
 			}
 
-			if (queryStr == null) {
+			if (namedQueryStr == null) {
 				throw new JdbcWrapperException(
 						"Error ejecutando  consulta de registro único. No se ha definido la consulta");
 			}
@@ -392,9 +441,13 @@ public class JdbcNamedWrapperImpl<T> extends JdbcBase implements JdbcNamedWrappe
 						"Error ejecutando  consulta de registro único. Es necesario definir un gestor de filas");
 			}
 
-			ps = getPreparedStatement(con, queryStr);
+			ClassWrapper<String> wrap = new ClassWrapper<>();
+			wrap.setValue(namedQueryStr);
+			List<String> fields = JdbcUtils.extractFields(wrap);
+			ps = getPreparedStatement(con, wrap.getValue());
 			NamedParameterSetter setter = new NamedParameterSetter();
 			setter.setStatement(ps);
+			setter.setFields(fields);
 			paramManager.configureParameters(setter);
 			rs = ps.executeQuery();
 			Cursor cursor = new Cursor();

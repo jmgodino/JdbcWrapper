@@ -22,10 +22,12 @@ public interface JdbcNamedWrapper<T> {
 	void insert(String updateStr, NamedParameterManager paramManager) ;
 
 	int count(String queryCountStr);
+	
+	int count(String queryCountStr, NamedParameterManager paramManager);
 
 	JdbcNamedQuery<T> getQuery(String queryStr);
 
-	T getRecord(String queryStr, NamedParameterManager paramManager, RowManagerLambda<T> rowManager);
+	T getObject(String queryStr, NamedParameterManager paramManager, RowManagerLambda<T> rowManager);
 	
 	void debug(String message);
 
