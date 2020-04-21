@@ -46,6 +46,10 @@ public class Campo {
 		case "java.lang.Integer":
 		case "int":
 			return c.getInt(posicion);
+		case "long":
+		case "java.lang.Long":
+		case "java.math.BigInteger":
+			return c.getBigInt(posicion);
 		case "java.math.BigDecimal":
 		case "float":
 		case "double":

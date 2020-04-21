@@ -33,6 +33,14 @@ public class NamedParameterSetter {
 		}
 	}
 
+	public void setBigInt(String name, long valor) {
+		try {
+			statement.setLong(getIndex(name), valor);
+		} catch (SQLException e) {
+			throw new JdbcWrapperException(String.format("Error preparando parametro BigInteger %s %s", name, valor), e);
+		}
+	}
+	
 	public void setString(String name, String valor) {
 		try {
 			statement.setString(getIndex(name), valor);

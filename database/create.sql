@@ -4,15 +4,16 @@ DROP PROCEDURE EJEMPLOPA;
 DROP FUNCTION EJEMPLOPAFUNC;
 
 create table libros (
-ISBN INT PRIMARY KEY,
+ISBN BIGINT PRIMARY KEY,
 TITULO VARCHAR(500),
 FECHA DATE,
 TEXTO CLOB,
-PRECIO DECIMAL(7,2)
+PRECIO DECIMAL(7,2),
+EJEMPLARES INT
 );
 
-INSERT INTO LIBROS (ISBN, TITULO, FECHA, PRECIO, TEXTO) VALUES (1,'El señor de los anillos', CURRENT_DATE, 12.34, 'Texto muuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuy largo');
-INSERT INTO LIBROS (ISBN, TITULO, FECHA, PRECIO, TEXTO) VALUES (2,'El Hobbit', CURRENT_DATE, 45.67, 'Texto corto');
+INSERT INTO LIBROS (ISBN, TITULO, FECHA, PRECIO, EJEMPLARES, TEXTO) VALUES (1,'El señor de los anillos', CURRENT_DATE, 12.34, 22, 'Texto muuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuy largo');
+INSERT INTO LIBROS (ISBN, TITULO, FECHA, PRECIO, EJEMPLARES, TEXTO) VALUES (2,'El Hobbit', CURRENT_DATE, 45.67, 13, 'Texto corto');
 
 COMMIT;
 

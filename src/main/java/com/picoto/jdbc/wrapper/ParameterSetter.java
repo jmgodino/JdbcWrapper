@@ -25,6 +25,14 @@ public class ParameterSetter {
 			throw new JdbcWrapperException(String.format("Error preparando parametro Integer %d %s", pos, valor), e);
 		}
 	}
+	
+	public void setBigInt(int pos, long valor) {
+		try {
+			statement.setLong(pos, valor);
+		} catch (SQLException e) {
+			throw new JdbcWrapperException(String.format("Error preparando parametro BigInteger %d %s", pos, valor), e);
+		}
+	}
 
 	public void setString(int pos, String valor) {
 		try {

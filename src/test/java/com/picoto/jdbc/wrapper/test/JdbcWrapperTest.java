@@ -130,7 +130,7 @@ public class JdbcWrapperTest {
 				}, c -> {
 					Libro l = new Libro();
 					l.setTitulo(c.getString(1));
-					l.setIsbn(c.getInt(2));
+					l.setIsbn(c.getBigInt(2));
 					l.setFecha(c.getDate(3));
 					l.setPrecio(c.getBigDecimal(4));
 					l.setTexto(c.getClobAsString(5));
@@ -155,7 +155,7 @@ public class JdbcWrapperTest {
 		}, c -> {
 			Libro l = new Libro();
 			l.setTitulo(c.getString(1));
-			l.setIsbn(c.getInt(2));
+			l.setIsbn(c.getBigInt(2));
 			l.setFecha(c.getDate(3));
 			l.setPrecio(c.getBigDecimal(4));
 			l.setTexto(c.getClobAsString(5));
@@ -210,7 +210,7 @@ public class JdbcWrapperTest {
 		List<Libro> libros = testWrap.query("select titulo, isbn, fecha, precio, texto from libros", c -> {
 			Libro l = new Libro();
 			l.setTitulo(c.getString(1));
-			l.setIsbn(c.getInt(2));
+			l.setIsbn(c.getBigInt(2));
 			l.setFecha(c.getDate(3));
 			l.setPrecio(c.getBigDecimal(4));
 			l.setTexto(c.getClobAsString(5));
@@ -252,7 +252,7 @@ public class JdbcWrapperTest {
 				.parameterBigDecimal(new BigDecimal("12.34")).parameterDate(new Date()).getMappedObject(c -> {
 					Libro l = new Libro();
 					l.setTitulo(c.getString(1));
-					l.setIsbn(c.getInt(2));
+					l.setIsbn(c.getBigInt(2));
 					l.setFecha(c.getDate(3));
 					l.setPrecio(c.getBigDecimal(4));
 					l.setTexto(c.getClobAsString(5));
@@ -272,7 +272,7 @@ public class JdbcWrapperTest {
 		JdbcWrapper<Libro> testWrap = JdbcWrapperFactory.getJdbcWrapper(Libro.class, getConnection(), false, true);
 		List<Libro> libros = testWrap.getQuery(
 				"select titulo, isbn, fecha, precio, texto from libros where ISBN = ? and titulo = ? and precio = ? and fecha = ?")
-				.parameterInteger(1).parameterString("El señor de los anillos")
+				.parameterBigInt(1).parameterString("El señor de los anillos")
 				.parameterBigDecimal(new BigDecimal("12.34")).parameterDate(new Date()).executeQuery(Libro.class);
 
 		testWrap.debug("********************* Libros consulta inline ***************************");
@@ -295,7 +295,7 @@ public class JdbcWrapperTest {
 				.parameterBigDecimal(new BigDecimal("12.34")).parameterDate(new Date()).executeMappedQuery(c -> {
 					Libro l = new Libro();
 					l.setTitulo(c.getString(1));
-					l.setIsbn(c.getInt(2));
+					l.setIsbn(c.getBigInt(2));
 					l.setFecha(c.getDate(3));
 					l.setPrecio(c.getBigDecimal(4));
 					l.setTexto(c.getClobAsString(5));

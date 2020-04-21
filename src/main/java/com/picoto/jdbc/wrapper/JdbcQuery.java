@@ -18,6 +18,11 @@ public class JdbcQuery<T> extends JdbcBaseQuery<T> {
 		paramSetter.setInt(currentIndex++, valor);
 		return this;
 	}
+	
+	public JdbcQuery<T> parameterBigInt(long valor) {
+		paramSetter.setBigInt(currentIndex++, valor);
+		return this;
+	}
 
 	public JdbcQuery<T> parameterString(String valor) {
 		paramSetter.setString(currentIndex++, valor);

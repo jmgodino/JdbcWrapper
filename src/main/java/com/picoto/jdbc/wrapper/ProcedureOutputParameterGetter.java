@@ -28,6 +28,15 @@ public class ProcedureOutputParameterGetter {
 		}
 	}
 
+	public long getBigInt(int pos) {
+		try {
+			return callableStatement.getLong(pos);
+		} catch (Exception e) {
+			throw new JdbcWrapperException(String.format("Error al recuperar el campo BigInteger %s en el cursor", pos),
+					e);
+		}
+	}
+	
 	public String getString(int pos) {
 		try {
 			return callableStatement.getString(pos);

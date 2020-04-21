@@ -63,11 +63,12 @@ public class JdbcNamedWrapperTest {
 	@Test
 	public void crearLibro() {
 		JdbcNamedWrapper<Libro> testWrap = JdbcWrapperFactory.getJdbcNamedWrapper(Libro.class, getConnection(), false, true);
-		testWrap.insert("insert into libros (isbn, titulo, fecha, precio, texto) values (:isbn, :titulo, :fecha, :precio, :texto)", ps -> {
-			ps.setInt("isbn", 3);
+		testWrap.insert("insert into libros (isbn, titulo, fecha, precio, ejemplares, texto) values (:isbn, :titulo, :fecha, :precio, :ejemplares, :texto)", ps -> {
+			ps.setBigInt("isbn", 3);
 			ps.setString("titulo", "El Silmarilion");
 			ps.setDate("fecha", new Date());
 			ps.setBigDecimal("precio", BigDecimal.valueOf(34.56f));
+			ps.setInt("ejemplares", 25);
 			ps.setClob("texto", "Vaya rollo de libro");
 		});
 		testWrap.debug("* Libro creado");
@@ -100,16 +101,17 @@ public class JdbcNamedWrapperTest {
 				true);
 
 		List<Libro> libros = testWrap.query(
-				"select titulo, isbn, fecha, precio, texto from libros where ISBN = :isbn and titulo = :titulo", np -> {
+				"select titulo, isbn, fecha, precio, ejemplares, texto from libros where ISBN = :isbn and titulo = :titulo", np -> {
 					np.setInt("isbn", 1);
 					np.setString("titulo", "El señor de los anillos");
 				}, c -> {
 					Libro l = new Libro();
 					l.setTitulo(c.getString(1));
-					l.setIsbn(c.getInt(2));
+					l.setIsbn(c.getBigInt(2));
 					l.setFecha(c.getDate(3));
 					l.setPrecio(c.getBigDecimal(4));
-					l.setTexto(c.getClobAsString(5));
+					l.setEjemplares(c.getInt(5));
+					l.setTexto(c.getClobAsString(6));
 					return l;
 				});
 
@@ -128,7 +130,7 @@ public class JdbcNamedWrapperTest {
 				true);
 		List<Libro> libros = testWrap.getQuery(
 				"select titulo, isbn, fecha, precio, texto from libros where ISBN = :isbn and titulo = :titulo and precio = :precio and fecha = :fecha")
-				.parameterInteger("isbn", 1).parameterString("titulo", "El señor de los anillos")
+				.parameterBigInt("isbn", 1).parameterString("titulo", "El señor de los anillos")
 				.parameterBigDecimal("precio", new BigDecimal("12.34")).parameterDate("fecha", new Date())
 				.executeQuery(Libro.class);
 
@@ -153,7 +155,7 @@ public class JdbcNamedWrapperTest {
 				.executeMappedQuery(c -> {
 					Libro l = new Libro();
 					l.setTitulo(c.getString(1));
-					l.setIsbn(c.getInt(2));
+					l.setIsbn(c.getBigInt(2));
 					l.setFecha(c.getDate(3));
 					l.setPrecio(c.getBigDecimal(4));
 					l.setTexto(c.getClobAsString(5));
@@ -222,7 +224,7 @@ public class JdbcNamedWrapperTest {
 		}, c -> {
 			Libro l = new Libro();
 			l.setTitulo(c.getString(1));
-			l.setIsbn(c.getInt(2));
+			l.setIsbn(c.getBigInt(2));
 			l.setFecha(c.getDate(3));
 			l.setPrecio(c.getBigDecimal(4));
 			l.setTexto(c.getClobAsString(5));

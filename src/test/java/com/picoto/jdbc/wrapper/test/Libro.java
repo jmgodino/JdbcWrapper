@@ -5,9 +5,10 @@ import java.util.Date;
 
 public class Libro {
 	private String titulo;
-	private int ISBN;
+	private long ISBN;
 	private BigDecimal precio;
 	private Date fecha;
+	private Integer ejemplares;
 
 	public Libro() {
 		super();
@@ -47,12 +48,21 @@ public class Libro {
 		this.titulo = titulo;
 	}
 
-	public Integer getIsbn() {
+	public Long getIsbn() {
 		return ISBN;
 	}
 
-	public void setIsbn(Integer isbn) {
+	public void setIsbn(Long isbn) {
 		ISBN = isbn;
+	}
+	
+
+	public Integer getEjemplares() {
+		return ejemplares;
+	}
+
+	public void setEjemplares(Integer ejemplares) {
+		this.ejemplares = ejemplares;
 	}
 
 	@Override

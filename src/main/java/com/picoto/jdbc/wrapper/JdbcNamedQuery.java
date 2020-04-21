@@ -17,6 +17,11 @@ public class JdbcNamedQuery<T> extends JdbcBaseQuery<T> {
 		namedParameterSetter.setInt(name, valor);
 		return this;
 	}
+	
+	public JdbcNamedQuery<T> parameterBigInt(String name, long valor) {
+		namedParameterSetter.setBigInt(name, valor);
+		return this;
+	}	
 
 	public JdbcNamedQuery<T> parameterString(String name, String valor) {
 		namedParameterSetter.setString(name, valor);
